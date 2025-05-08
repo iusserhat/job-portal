@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useState } from "react";
 import {
   BellIcon,
   Bars3Icon,
@@ -10,6 +10,7 @@ import {
   Cog8ToothIcon,
   ArrowLeftStartOnRectangleIcon,
   BookmarkIcon,
+  DocumentDuplicateIcon,
 } from "@heroicons/react/24/outline";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import { useAuth } from "@/providers";
@@ -18,20 +19,39 @@ import Logo from "@/components/core-ui/Logo";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
 
-  const navigation = useMemo(() => {
-    if (isAuthenticated) {
+  // Kullanıcı rolüne göre menü öğelerini belirleme
+  const getNavLinks = () => {
+    if (!isAuthenticated || !user) return [];
+
+    const commonLinks = [
+      { name: "Ana Sayfa", href: "/", icon: HomeIcon },
+    ];
+
+    // İşveren için menü öğeleri
+    if (user.user_type_id === "employer") {
       return [
-        { name: "Home", href: "/", icon: HomeIcon },
-        { name: "My Jobs", href: "/my-jobs", icon: BriefcaseIcon },
-        { name: "Saved Jobs", href: "/saved-jobs", icon: BookmarkIcon },
-        { name: "Messages", href: "/messages", icon: ChatBubbleLeftRightIcon },
+        ...commonLinks,
+        { name: "İlanlarım", href: "/my-jobs", icon: BriefcaseIcon },
+        { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
       ];
     }
+    
+    // İş arayan için menü öğeleri
+    return [
+      ...commonLinks,
+      { name: "Başvurularım", href: "/my-applications", icon: DocumentDuplicateIcon },
+      { name: "Kaydedilen İlanlar", href: "/saved-jobs", icon: BookmarkIcon },
+      { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
+    ];
+  };
 
-    return [];
-  }, [isAuthenticated]);
+  // Kullanıcı rolüne göre menü öğelerini al
+  const navigation = getNavLinks();
+
+  // İşveren kontrolü
+  const isEmployer = user?.user_type_id === "employer";
 
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -113,7 +133,7 @@ const Header = () => {
                           ) : (
                             <UserIcon className="h-5 w-5 mr-2 text-gray-400" />
                           )}
-                          Your Profile
+                          Profilim
                         </button>
                       )}
                     </Menu.Item>
@@ -131,7 +151,7 @@ const Header = () => {
                           ) : (
                             <Cog8ToothIcon className="h-5 w-5 mr-2 text-gray-400" />
                           )}
-                          Settings
+                          Ayarlar
                         </button>
                       )}
                     </Menu.Item>
@@ -152,7 +172,7 @@ const Header = () => {
                           ) : (
                             <ArrowLeftStartOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400" />
                           )}
-                          Sign out
+                          Çıkış Yap
                         </button>
                       )}
                     </Menu.Item>
@@ -160,12 +180,14 @@ const Header = () => {
                 </Menu.Items>
               </Transition>
             </Menu>
-            <a
-              href="#"
-              className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Post a Job
-            </a>
+            {isEmployer && (
+              <Link
+                to="/post-job"
+                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                İlan Yayınla
+              </Link>
+            )}
           </div>
         ) : (
           <div className="hidden lg:flex lg:flex-1 lg:justify-end flex items-center gap-x-8">
@@ -173,13 +195,13 @@ const Header = () => {
               to="/login"
               className="text-sm font-semibold leading-6 text-gray-900"
             >
-              Log in
+              Giriş Yap
             </Link>
             <Link
               to="/register"
               className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign up
+              Kayıt Ol
             </Link>
           </div>
         )}
@@ -230,13 +252,13 @@ const Header = () => {
                       to="/login"
                       className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                     >
-                      Log in
+                      Giriş Yap
                     </Link>
                     <Link
                       to="/register"
                       className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                     >
-                      Sign up
+                      Kayıt Ol
                     </Link>
                   </>
                 ) : (
@@ -245,21 +267,22 @@ const Header = () => {
                       to="/profile"
                       className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                     >
-                      Profile
+                      Profilim
                     </Link>
-                    <Link
-                      to="/register"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    >
-                      Settings
-                    </Link>
-                    <Link
-                      to="/"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    {isEmployer && (
+                      <Link
+                        to="/post-job"
+                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                      >
+                        İlan Yayınla
+                      </Link>
+                    )}
+                    <button
                       onClick={logout}
+                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
                     >
-                      Sign out
-                    </Link>
+                      Çıkış Yap
+                    </button>
                   </>
                 )}
               </div>
@@ -272,3 +295,5 @@ const Header = () => {
 };
 
 export default Header;
+
+

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   BookmarkIcon,
   BriefcaseIcon,
@@ -7,502 +8,301 @@ import {
 } from "@heroicons/react/24/outline";
 import Divider from "@/components/core-ui/Divider";
 import PortalLayout from "@/components/layouts/portal/PortalLayout";
-
-const jobs = [
-  {
-    id: 1,
-    title: "UX/UI Designer",
-    company: "Google",
-    location: "Mountain View, California",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 2,
-    title: "Software Engineer",
-    company: "Facebook",
-    location: "Menlo Park, California",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 3,
-    title: "Product Manager",
-    company: "Amazon",
-    location: "Seattle, Washington",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 4,
-    title: "Data Scientist",
-    company: "Microsoft",
-    location: "Redmond, Washington",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 5,
-    title: "UX/UI Designer",
-    company: "Google",
-    location: "Mountain View, California",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 6,
-    title: "Software Engineer",
-    company: "Facebook",
-    location: "Menlo Park, California",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 7,
-    title: "Product Manager",
-    company: "Amazon",
-    location: "Seattle, Washington",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 8,
-    title: "Data Scientist",
-    company: "Microsoft",
-    location: "Redmond, Washington",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-  {
-    id: 9,
-    title: "UX/UI Designer",
-    company: "Google",
-    location: "Mountain View, California",
-    tags: ["Remote", "Full-time", "5+ years"],
-    salary: "$100k - $120k/yr",
-    time: "5min ago",
-  },
-];
+import { Link } from "react-router-dom";
 
 const HomePage = () => {
+  const [recentJobs, setRecentJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Örnek iş ilanları verisi
+  const sampleJobs = [
+    {
+      id: 1,
+      jobTitle: "Yazılım Geliştirici",
+      companyName: "Bandırma Teknoloji",
+      location: "Merkez",
+      jobType: "Tam Zamanlı",
+      createdAt: "2024-04-15",
+      salary: "15.000₺ - 25.000₺",
+      requiredSkills: ["React", "Node.js", "MongoDB"],
+      description: "Bandırma merkezli teknoloji şirketimiz için full-stack geliştirici arıyoruz...",
+      isActive: true
+    },
+    {
+      id: 2,
+      jobTitle: "Satış Temsilcisi",
+      companyName: "ABC Pazarlama",
+      location: "Erdek",
+      jobType: "Yarı Zamanlı",
+      createdAt: "2024-04-14",
+      salary: "Asgari Ücret + Prim",
+      requiredSkills: ["İletişim", "Satış Deneyimi", "MS Office"],
+      description: "Erdek'teki mağazamız için deneyimli satış temsilcileri arıyoruz...",
+      isActive: true
+    },
+    {
+      id: 3,
+      jobTitle: "Garson",
+      companyName: "Sahil Restaurant",
+      location: "Merkez",
+      jobType: "Tam Zamanlı",
+      createdAt: "2024-04-10", 
+      salary: "Asgari Ücret",
+      requiredSkills: ["Servis Deneyimi", "İletişim"],
+      description: "Sahil restoranımızda çalışacak tecrübeli garsonlar arıyoruz...",
+      isActive: true
+    },
+    {
+      id: 4,
+      jobTitle: "Muhasebe Uzmanı",
+      companyName: "XYZ Mali Müşavirlik",
+      location: "Merkez",
+      jobType: "Tam Zamanlı",
+      createdAt: "2024-04-08",
+      salary: "12.000₺ - 18.000₺",
+      requiredSkills: ["Luca", "ETA", "Muhasebe Deneyimi"],
+      description: "Mali müşavirlik ofisimiz için deneyimli muhasebe uzmanı arıyoruz...",
+      isActive: true
+    },
+    {
+      id: 5,
+      jobTitle: "Ön Büro Elemanı",
+      companyName: "Bandırma Otel",
+      location: "Merkez",
+      jobType: "Tam Zamanlı",
+      createdAt: "2024-04-12",
+      salary: "Belirtilmemiş",
+      requiredSkills: ["İngilizce", "Misafir İlişkileri", "Rezervasyon Sistemleri"],
+      description: "Otelimizin ön büro departmanında görevlendirilmek üzere takım arkadaşları arıyoruz...",
+      isActive: true
+    }
+  ];
+
+  // Sayfa yüklendiğinde verileri çek
+  useEffect(() => {
+    // LocalStorage'dan ilanları al
+    const fetchJobs = () => {
+      try {
+        // LocalStorage'dan tüm ilanları al veya örnek verileri kullan
+        let storedJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
+        
+        // myJobs'dan da ilanları al ve birleştir
+        const myJobs = JSON.parse(localStorage.getItem('myJobs') || '[]');
+        
+        // Aynı ID'ye sahip ilanları önle (myJobs ilanları tercih et)
+        const allJobIds = new Set(storedJobs.map(job => job.id));
+        const newMyJobs = myJobs.filter(job => !allJobIds.has(job.id));
+        
+        if (newMyJobs.length > 0) {
+          storedJobs = [...newMyJobs, ...storedJobs];
+          localStorage.setItem('allJobs', JSON.stringify(storedJobs));
+        }
+        
+        // Eğer localStorage'da hiç ilan yoksa örnek verileri kullan
+        if (storedJobs.length === 0) {
+          // Örnek verileri localStorage'a kaydet
+          localStorage.setItem('allJobs', JSON.stringify(sampleJobs));
+          storedJobs = sampleJobs;
+        }
+        
+        // Sadece aktif ilanları göster ve en yeni ilanları başa al
+        const activeJobs = storedJobs
+          .filter(job => job.isActive !== false)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
+        setRecentJobs(activeJobs);
+      } catch (error) {
+        console.error("İş ilanları alınırken hata:", error);
+        // Hata durumunda örnek verileri göster
+        setRecentJobs(sampleJobs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Yükleme efekti için kısa bir gecikme
+    setTimeout(fetchJobs, 1000);
+  }, []);
+
   return (
-    <PortalLayout title="Home">
-      <aside className="sticky top-24 hidden w-80 shrink-0 xl:block">
-        <div className="overflow-hidden rounded-lg bg-white shadow">
-          <div className="px-4 py-5 sm:p-6">
-            <h4 className="text-lg font-semibold text-gray-900">Filters</h4>
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Sort By [Most Recent, A-Z, Top Salary, Trending] Radio Groups Grid */}
-            <div className="">
-              <h5 className="text-sm font-semibold text-gray-900 mb-2">
-                Sort By
-              </h5>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { id: "most-recent", name: "Most Recent" },
-                  { id: "a-z", name: "A-Z" },
-                  { id: "top-salary", name: "Top Salary" },
-                  { id: "trending", name: "Trending" },
-                ].map((item) => (
-                  <div key={item.id} className="flex items-center gap-x-2">
-                    <input
-                      id={item.id}
-                      name="sort-by"
-                      type="radio"
-                      className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+    <PortalLayout title="Bandırma İş Portalı">
+      <div className="bg-white">
+        {/* Hero section */}
+        <div className="relative isolate overflow-hidden pt-14">
+          <div className="absolute inset-y-0 right-1/2 -z-10 -mr-96 w-[200%] origin-top-right skew-x-[-30deg] bg-indigo-50 shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50"></div>
+          <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
+            <div className="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-6">
+              <div className="max-w-xl lg:max-w-lg">
+                <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                  Bandırma'da İş Bulmak Artık Daha Kolay
+                </h1>
+                <p className="mt-6 text-lg leading-8 text-gray-600">
+                  Bandırma ve çevresindeki en güncel iş ilanlarını keşfedin. 
+                  İster deneyimli bir profesyonel olun, ister kariyerinize yeni başlıyor olun, 
+                  size uygun pozisyonlar burada!
+                </p>
+                <div className="mt-10 flex items-center gap-x-6">
+                  <a
+                    href="#recent-jobs"
+                    className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  >
+                    İş İlanlarını Gör
+                  </a>
+                  <a href="#" className="text-sm font-semibold leading-6 text-gray-900">
+                    İşveren Olarak Kayıt Ol <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              </div>
+              <div className="mt-14 flex justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
+                <div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-last xl:pt-80">
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
+                      alt=""
+                      className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
                     />
-                    <label htmlFor={item.id} className="text-sm text-gray-900">
-                      {item.name}
-                    </label>
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
                   </div>
-                ))}
-              </div>
-            </div>
-            {/* Sort By [Most Recent, A-Z, Top Salary, Trending] Radio Groups Grid End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Job Salary Filter Inputs */}
-            <div>
-              <h5 className="text-sm font-semibold text-gray-900 mb-2">
-                Salary
-              </h5>
-              <div className="flex gap-x-4">
-                <input
-                  type="text"
-                  className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 w-1/2"
-                  placeholder="Min"
-                />
-                <input
-                  type="text"
-                  className="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 w-1/2"
-                  placeholder="Max"
-                />
-              </div>
-            </div>
-            {/* Job Salary Filter Inputs End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Job Type [Full-time, Part-time, Remote] Checkbox Group */}
-            <div>
-              <h5 className="text-sm font-semibold text-gray-900 mb-2">
-                Job Type
-              </h5>
-              <div className="grid grid-cols-2 gap-4">
-                {["Full-time", "Part-time", "Remote", "Voluntier"].map(
-                  (item) => (
-                    <div key={item} className="flex items-center gap-x-2">
-                      <div className="relative flex items-start">
-                        <div className="flex h-6 items-center">
-                          <input
-                            id="comments"
-                            aria-describedby="comments-description"
-                            name="comments"
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                          />
-                        </div>
-                        <div className="ml-3 text-sm leading-6">
-                          <label
-                            htmlFor="comments"
-                            className="font-md text-gray-900"
-                          >
-                            {item}
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-            {/* Job Type [Full-time, Part-time, Remote] Checkbox Group End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Job Experience [1-3 years, 3-5 years, 5+ years] Checkbox Group */}
-            <div>
-              <h5 className="text-sm font-semibold text-gray-900 mb-2">
-                Experience
-              </h5>
-              <div className="grid grid-cols-2 gap-4">
-                {["1-3 years", "3-5 years", "5+ years"].map((item) => (
-                  <div key={item} className="flex items-center gap-x-2">
-                    <div className="relative flex items-start">
-                      <div className="flex h-6 items-center">
-                        <input
-                          id="comments"
-                          aria-describedby="comments-description"
-                          name="comments"
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                        />
-                      </div>
-                      <div className="ml-3 text-sm leading-6">
-                        <label
-                          htmlFor="comments"
-                          className="font-md text-gray-900"
-                        >
-                          {item}
-                        </label>
-                      </div>
-                    </div>
+                </div>
+                <div className="mr-auto w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1485217988980-11786ced9454?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
+                      alt=""
+                      className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
+                    />
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
                   </div>
-                ))}
-              </div>
-            </div>
-            {/* Job Experience [1-3 years, 3-5 years, 5+ years] Checkbox Group End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Job Location [Remote, On-site, Hybrid] Checkbox Group */}
-            <div>
-              <h5 className="text-sm font-semibold text-gray-900 mb-2">
-                Location
-              </h5>
-              <div className="grid grid-cols-2 gap-4">
-                {["Remote", "On-site", "Hybrid"].map((item) => (
-                  <div key={item} className="flex items-center gap-x-2">
-                    <div className="relative flex items-start">
-                      <div className="flex h-6 items-center">
-                        <input
-                          id="comments"
-                          aria-describedby="comments-description"
-                          name="comments"
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                        />
-                      </div>
-                      <div className="ml-3 text-sm leading-6">
-                        <label
-                          htmlFor="comments"
-                          className="font-md text-gray-900"
-                        >
-                          {item}
-                        </label>
-                      </div>
-                    </div>
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=focalpoint&fp-x=.4&w=396&h=528&q=80"
+                      alt=""
+                      className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
+                    />
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
                   </div>
-                ))}
+                </div>
+                <div className="w-44 flex-none space-y-8 pt-32 sm:pt-0">
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1670272502246-768d249768ca?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=left&w=400&h=528&q=80"
+                      alt=""
+                      className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
+                    />
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
+                  </div>
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1670272505284-8faba1c31f7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
+                      alt=""
+                      className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
+                    />
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
+                  </div>
+                </div>
               </div>
             </div>
-            {/* Job Location [Remote, On-site, Hybrid] Checkbox Group End */}
-          </div>
-        </div>
-      </aside>
-
-      <main className="flex-1">
-        {/* Jobs Search Area Mix Search Input with Location Dropdown & Search Button */}
-        <div className="flex gap-x-4 justify-between">
-          <div className="flex gap-x-4 mb-4">
-            <div className="relative rounded-md shadow-sm w-80">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                className="block w-full h-10 rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="Search Jobs"
-              />
-            </div>
-
-            <button
-              type="button"
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Search
-            </button>
-          </div>
-        </div>
-        {/* Jobs Search Area Mix Search Input with Location Dropdown & Search Button End */}
-
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">
-            Search Results
-          </h3>
-
-          {/* Search Results Count */}
-          <div className="flex items-center gap-x-2">
-            <span className="text-sm text-gray-500">20,000 Results Found</span>
           </div>
         </div>
 
-        {/* Jobs List Grid extra-large - 5 columns , large - 4 columns, medium - 3 columns, small - 2 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {jobs.map((job, index) => (
-            <div
-              key={job.id}
-              className={`overflow-hidden rounded-lg bg-white shadow cursor-pointer ${
-                index === 0 ? "border border-indigo-600" : ""
-              }`}
-            >
-              <div className="px-4 py-5 sm:p-6">
-                {/* Job Title, Company, Location */}
-                <div className="flex gap-x-4 justify-between">
-                  <div className="flex gap-x-2">
-                    <div className="rounded w-12 h-12 bg-gray-200 flex items-center justify-center">
-                      <BriefcaseIcon className="h-6 w-6 text-indigo-600" />
-                    </div>
-
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900">
-                        {job.title}
-                      </h4>
-                      <p className="text-sm text-gray-500">{job.company}</p>
-                      <p className="text-sm text-gray-500">{job.location}</p>
-                    </div>
-                  </div>
-
-                  {/* Save Job Action */}
-                  <div className="flex items-start">
-                    <button
-                      type="button"
-                      className="text-sm font-semibold text-gray-900  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-200"
-                    >
-                      <BookmarkIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                  {/* Save Job Action End */}
-                </div>
-                {/* Job Title, Company, Location End */}
-
-                {/* Tags */}
-                <div className="flex gap-x-2 mt-2">
-                  {job.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs text-gray-700 ring-1 ring-inset ring-gray-600/10"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                {/* Tags End */}
-
-                {/* Salary & Time */}
-                <div className="flex items-center gap-x-2 mt-2 justify-between">
-                  <div className="flex items-center gap-x-2">
-                    <CurrencyDollarIcon className="h-6 w-6 text-indigo-600" />
-                    <span className="text-sm text-gray-500 fs-7">
-                      {job.salary}
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-400">{job.time}</span>
-                </div>
-                {/* Salary & Time End */}
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Jobs List Scrollable End */}
-      </main>
-
-      <aside className="sticky top-24 hidden w-80 shrink-0 xl:block">
-        <div className="overflow-hidden rounded-lg bg-white shadow">
-          <div className="px-4 py-5 sm:p-6 gap-4">
-            {/* Job Details */}
-            <div className="flex gap-x-4 justify-between">
-              <div className="rounded w-16 h-16 bg-gray-200 flex items-center justify-center">
-                <BriefcaseIcon className="h-10 w-10 text-indigo-600" />
-              </div>
-
-              {/* Share Job & Save Job Actions */}
-              <div className="flex gap-4 items-start">
-                <button
-                  type="button"
-                  className=" text-sm font-semibold text-gray-900  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-200"
-                >
-                  <ShareIcon className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  className="text-sm font-semibold text-gray-900  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-200"
-                >
-                  <BookmarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-2">
-              <h2 className="text-lg font-semibold text-gray-900">
-                UX/UI Designer
+        {/* Recent jobs section */}
+        <div id="recent-jobs" className="py-16 sm:py-24">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Güncel İş İlanları
               </h2>
-              <p className="text-sm text-gray-500">
-                Google - Mountain View, California
+              <p className="mt-2 text-lg leading-8 text-gray-600">
+                Bandırma ve çevresindeki en yeni iş fırsatlarını keşfedin
               </p>
             </div>
-            {/* Job Details End */}
-
-            {/* Applications Numbers */}
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs mt-2 text-blue-700 ring-1 ring-inset ring-blue-700/10">
-              1000+ Applications
-            </span>
-            {/* Applications Numbers End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Job Details, Job Type, Experience, Posted Date */}
-            <div className="flex gap-4 flex-col">
-              <div className="flex gap-x-4 justify-between">
-                <div>
-                  <h3 className="text-sm text-gray-900 font-semibold mb-2">
-                    Job Type
-                  </h3>
-                  <p className="text-sm text-gray-400">Full-time</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-900 font-semibold mb-2">
-                    Experience
-                  </h3>
-                  <p className="text-sm text-gray-400">5+ years</p>
-                </div>
+            
+            {loading ? (
+              <div className="mt-16 text-center py-20">
+                <div className="spinner"></div>
+                <p className="mt-2 text-gray-500">İş İlanları Yükleniyor...</p>
               </div>
-              <div className="flex gap-x-4 justify-between">
-                <div>
-                  <h3 className="text-sm text-gray-900 font-semibold mb-2">
-                    Position
-                  </h3>
-                  <p className="text-sm text-gray-400">UX/UI Designer</p>
-                </div>
-                <div>
-                  <h3 className="text-sm text-gray-900 font-semibold mb-2">
-                    Date Posted
-                  </h3>
-                  <p className="text-sm text-gray-400">5min ago</p>
-                </div>
+            ) : recentJobs.length === 0 ? (
+              <div className="mt-16 text-center py-20">
+                <p className="text-gray-500">Henüz ilan bulunmuyor.</p>
               </div>
-            </div>
-            {/* Job Details, Job Type, Experience, Posted Date End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Job Description */}
-            <div>
-              <h3 className="text-sm text-gray-900 font-semibold mb-2">
-                Description
-              </h3>
-              <p className="text-sm text-gray-500">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ac
-                purus sit amet nisl tincidunt tincidunt. Nullam ut lacinia
-                mauris. Nullam in nunc nec nunc ultricies fermentum. Nullam nec
-                libero at odio ultricies lacinia. Nullam nec libero at odio
-                ultricies lacinia. Nullam nec libero at odio ultricies lacinia.
-              </p>
-            </div>
-            {/* Job Description End */}
-
-            <div className="py-5">
-              <Divider />
-            </div>
-
-            {/* Base Salary  & Apply Button */}
-            <div className="flex gap-4 flex-col">
-              <div className="flex gap-x-4 justify-between">
-                <div>
-                  <h3 className="text-sm text-gray-900 font-semibold mb-2">
-                    Base Salary
-                  </h3>
-                  <p className="text-sm text-gray-400">$100k - $120k/yr</p>
-                </div>
+            ) : (
+              <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+                {recentJobs.map((job) => (
+                  <article key={job.id} className="flex flex-col items-start border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div className="w-full bg-indigo-100 p-4">
+                      <div className="flex items-center gap-x-4">
+                        <span className="text-xs rounded bg-indigo-600 px-2 py-1 font-medium text-white">
+                          {job.jobType}
+                        </span>
+                        <time dateTime={job.createdAt} className="text-xs text-gray-500">
+                          {new Date(job.createdAt).toLocaleDateString('tr-TR')}
+                        </time>
+                      </div>
+                      <div className="relative mt-3">
+                        <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                          <a href={`/job/${job.id}`}>
+                            <span className="absolute inset-0" />
+                            {job.jobTitle}
+                          </a>
+                        </h3>
+                        <p className="text-sm text-gray-600 font-medium mt-1">{job.companyName}</p>
+                      </div>
+                    </div>
+                    <div className="w-full p-4">
+                      <p className="mt-1 line-clamp-3 text-sm leading-6 text-gray-600">
+                        {job.description}
+                      </p>
+                      <div className="mt-4 flex gap-2 flex-wrap">
+                        {job.requiredSkills && job.requiredSkills.slice(0, 3).map((skill, index) => (
+                          <span key={index} className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
+                            {skill}
+                          </span>
+                        ))}
+                        {job.requiredSkills && job.requiredSkills.length > 3 && (
+                          <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600">
+                            +{job.requiredSkills.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="w-full border-t border-gray-200 p-4 flex justify-between items-center">
+                      <div className="flex items-center text-xs text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {job.location}
+                      </div>
+                      <div className="text-xs font-medium text-gray-700">
+                        {job.salary}
+                      </div>
+                    </div>
+                    <div className="w-full p-4 bg-gray-50 flex justify-center">
+                      <Link 
+                        to={`/job/${job.id}`} 
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+                      >
+                        İlana Başvur
+                        <span aria-hidden="true"> &rarr;</span>
+                      </Link>
+                    </div>
+                  </article>
+                ))}
               </div>
-              <button
-                type="button"
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            )}
+
+            <div className="mt-12 flex justify-center">
+              <a
+                href="#"
+                className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-200 hover:bg-indigo-50"
               >
-                Apply Now
-              </button>
+                Tüm İlanları Görüntüle
+              </a>
             </div>
-            {/* Base Salary  & Apply Button End */}
           </div>
         </div>
-      </aside>
+      </div>
     </PortalLayout>
   );
 };

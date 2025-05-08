@@ -7,7 +7,7 @@ const Logo = () => {
       <span className="sr-only">JobPortal</span>
       <span className="text-2xl font-semibold text-indigo-600 flex items-center gap-x-2">
         <BriefcaseIcon className="h-8 w-8" />
-        JobPortal
+       Part Time Campus Bandırma
       </span>
     </Link>
   );
