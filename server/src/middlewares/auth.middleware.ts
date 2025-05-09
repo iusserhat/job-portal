@@ -36,7 +36,11 @@ export const authMiddleware = (
         });
     }
 
-    console.log("Kullanıcı doğrulandı:", user._id);
+    console.log("Kullanıcı doğrulandı:", {
+      id: user._id,
+      email: user.email,
+      user_type_id: user.user_type_id
+    });
     req.user = user;
     next();
   })(req, res, next);

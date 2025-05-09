@@ -29,6 +29,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user_type_id: user.user_type_id || "jobseeker"
     };
     
+    // Kullanıcı tipinin hem doğru olduğundan hem de string olduğundan emin olalım
+    modifiedUser.user_type_id = String(modifiedUser.user_type_id).trim();
+    
     console.log("AuthProvider - Login: Kullanıcı tipi:", modifiedUser.user_type_id);
     
     // Test için kullanıcı tipini zorlamayı kaldırdık - kullanıcı gerçek tipini koruyacak
@@ -64,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
     
-    const userTypeId = user.user_type_id.toLowerCase();
+    const userTypeId = String(user.user_type_id).toLowerCase().trim();
     const result = userTypeId === "employer";
     console.log(`AuthProvider - isEmployer: user_type_id = ${userTypeId}, sonuç = ${result}`);
     
@@ -84,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
     
-    const userTypeId = user.user_type_id.toLowerCase();
+    const userTypeId = String(user.user_type_id).toLowerCase().trim();
     const result = userTypeId === "jobseeker";
     console.log(`AuthProvider - isJobSeeker: user_type_id = ${userTypeId}, sonuç = ${result}`);
     

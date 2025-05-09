@@ -5,6 +5,7 @@ import AppWrapper from "./AppWrapper";
 import { useAuth } from "./providers";
 import JobDetailPage from "./pages/JobDetailPage";
 import JobApplicationsPage from "./pages/JobApplicationsPage";
+import MyApplicationsPage from "./pages/MyApplicationsPage";
 
 const LoginPage = lazy(() => import("@/pages/AuthPages/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/AuthPages/RegisterPage"));

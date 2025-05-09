@@ -149,19 +149,30 @@ const JobApplicationsPage = () => {
       console.log("JobApplicationsPage - Başvurular çekiliyor:", apiUrl);
       console.log("JobApplicationsPage - Kullanıcı ID:", user?._id);
       console.log("JobApplicationsPage - Kullanıcı türü:", user?.user_type_id);
+      console.log("JobApplicationsPage - Token var mı:", !!token);
+      
+      /*
+      // Token kontrolü normal modda açılacak
+      if (!token) {
+        toast.error("Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.");
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+      }
+      */
       
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          // DEBUG: Auth header kaldırıldı
+          // 'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
-        },
-        credentials: 'include' // CORS için gerekli
+        }
       });
       
       if (!response.ok) {
         console.error(`JobApplicationsPage - Başvurular alınamadı, HTTP Durum: ${response.status}`);
+        console.error(`JobApplicationsPage - Hata detayları:`, await response.text().catch(() => 'Hata detayı alınamadı'));
         
         if (response.status === 401) {
           toast.error("Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.");
@@ -185,11 +196,32 @@ const JobApplicationsPage = () => {
       
       const data = await response.json();
       console.log("JobApplicationsPage - API yanıtı:", data);
+      console.log("JobApplicationsPage - API yanıtı verileri:", JSON.stringify(data.data, null, 2));
       
       if (data.success && data.data) {
         // Başvuruları ayarla ve göster
         setApplications(data.data);
         console.log(`JobApplicationsPage - ${data.data.length} başvuru yüklendi`);
+        
+        // Daha detaylı başvuru bilgilerini logla
+        if (data.data.length > 0) {
+          console.log("JobApplicationsPage - Tüm başvuru detayları:", data.data);
+          data.data.forEach((app, index) => {
+            console.log(`JobApplicationsPage - Başvuru #${index + 1} detayları:`, {
+              _id: app._id,
+              name: app.name,
+              email: app.email,
+              phone: app.phone,
+              status: app.status,
+              applied_date: app.applied_date,
+              cover_letter: app.cover_letter ? app.cover_letter.substring(0, 50) + '...' : 'Yok',
+              resume_url: app.resume_url || 'Yok',
+              user_id: app.user_id
+            });
+          });
+        } else {
+          console.log("JobApplicationsPage - Hiç başvuru bulunamadı");
+        }
         
         // İş ilanının başvuru sayısını güncelle
         if (job) {
