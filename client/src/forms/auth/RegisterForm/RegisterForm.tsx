@@ -27,27 +27,45 @@ const RegisterForm = () => {
         </div>
       )}
       <form onSubmit={form.handleSubmit} className="space-y-6" noValidate>
-        <div>
+        <div className="mb-6">
           <label
             htmlFor="user_type_name"
             className="block text-sm font-medium leading-6 text-gray-900"
           >
-            Register as
+            Hesap Türü
             <span className="text-red-500">*</span>
           </label>
-          <select
-            id="user_type_name"
-            name="user_type_name"
-            className="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            disabled={form.isSubmitting}
-            value={form.values.user_type_name}
-            onChange={(e) =>
-              form.setFieldValue("user_type_name", e.target.value)
-            }
-          >
-            <option value="job_seeker">Job Seeker</option>
-            <option value="hr_recruiter">HR Recruiter</option>
-          </select>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div
+              className={`flex items-center justify-center rounded-md border ${
+                form.values.user_type_name === "employer"
+                  ? "bg-indigo-50 border-indigo-600"
+                  : "border-gray-300"
+              } px-3 py-3 text-sm font-medium leading-4 hover:bg-gray-50 cursor-pointer`}
+              onClick={() => form.setFieldValue("user_type_name", "employer")}
+            >
+              <span className={form.values.user_type_name === "employer" ? "text-indigo-700" : "text-gray-900"}>
+                İşveren
+              </span>
+            </div>
+            <div
+              className={`flex items-center justify-center rounded-md border ${
+                form.values.user_type_name === "jobseeker"
+                  ? "bg-indigo-50 border-indigo-600"
+                  : "border-gray-300"
+              } px-3 py-3 text-sm font-medium leading-4 hover:bg-gray-50 cursor-pointer`}
+              onClick={() => form.setFieldValue("user_type_name", "jobseeker")}
+            >
+              <span className={form.values.user_type_name === "jobseeker" ? "text-indigo-700" : "text-gray-900"}>
+                İş Arayan
+              </span>
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            {form.values.user_type_name === "employer" 
+              ? "İş ilanı yayınlamak ve başvuruları yönetmek için işveren hesabı seçin." 
+              : "İş ilanlarına başvurmak ve iş aramak için iş arayan hesabı seçin."}
+          </p>
           {form.errors.user_type_name && (
             <FieldError error={form.errors.user_type_name} />
           )}
@@ -58,7 +76,7 @@ const RegisterForm = () => {
             htmlFor="email"
             className="block text-sm font-medium leading-6 text-gray-900"
           >
-            Email address
+            E-posta Adresi
             <span className="text-red-500">*</span>
           </label>
           <div className="mt-2">
@@ -82,7 +100,7 @@ const RegisterForm = () => {
             htmlFor="password"
             className="block text-sm font-medium leading-6 text-gray-900"
           >
-            Password
+            Şifre
             <span className="text-red-500">*</span>
           </label>
           <div className="relative mt-2 rounded-md shadow-sm">
@@ -105,7 +123,7 @@ const RegisterForm = () => {
             htmlFor="confirmPassword"
             className="block text-sm font-medium leading-6 text-gray-900"
           >
-            Repeat password
+            Şifre Tekrar
             <span className="text-red-500">*</span>
           </label>
           <div className="relative mt-2 rounded-md shadow-sm">
@@ -142,14 +160,14 @@ const RegisterForm = () => {
               htmlFor="termsConditions"
               className="ml-3 block text-sm leading-6 text-gray-700"
             >
-              I agree to the{" "}
               <a
                 href="#"
                 className="font-semibold text-indigo-600 hover:text-indigo-500"
                 onClick={handleOnOpenTermsConditionsModal}
               >
-                terms and conditions
-              </a>
+                Kullanım şartlarını
+              </a>{" "}
+              kabul ediyorum
             </label>
           </div>
           {form.errors.termsConditions && (
@@ -163,7 +181,7 @@ const RegisterForm = () => {
             className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             disabled={form.isSubmitting}
           >
-            Sign up
+            Kayıt Ol
           </button>
         </div>
       </form>

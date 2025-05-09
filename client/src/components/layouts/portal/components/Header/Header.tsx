@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import {
   BellIcon,
   Bars3Icon,
@@ -19,39 +19,64 @@ import Logo from "@/components/core-ui/Logo";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, user, isEmployer, isJobSeeker } = useAuth();
+
+  // Component yüklendiğinde ve user değiştiğinde kontrol yapalım
+  useEffect(() => {
+    console.log("Header - useEffect:", {
+      user: user,
+      isAuthenticated: isAuthenticated,
+      isEmployer: isEmployer(),
+      isJobSeeker: isJobSeeker(),
+      userType: user?.user_type_id
+    });
+  }, [user, isAuthenticated, isEmployer, isJobSeeker]);
 
   // Kullanıcı rolüne göre menü öğelerini belirleme
   const getNavLinks = () => {
-    if (!isAuthenticated || !user) return [];
+    if (!isAuthenticated || !user) {
+      console.log("Header - getNavLinks: Kullanıcı kimliği doğrulanmadı veya kullanıcı bulunamadı");
+      return [];
+    }
 
     const commonLinks = [
       { name: "Ana Sayfa", href: "/", icon: HomeIcon },
     ];
 
+    // İşveren kontrolü için hem fonksiyon hem de doğrudan alan kontrolü yapalım
+    const isEmployerUser = isEmployer();
+    const userTypeId = user.user_type_id?.toLowerCase?.() || "";
+    
+    console.log("Header - getNavLinks: Menü öğeleri belirleniyor:", {
+      isEmployerFunction: isEmployerUser,
+      userTypeIdDirect: userTypeId,
+      user: user
+    });
+
     // İşveren için menü öğeleri
-    if (user.user_type_id === "employer") {
-      return [
+    if (isEmployerUser || userTypeId === 'employer') {
+      const employerLinks = [
         ...commonLinks,
         { name: "İlanlarım", href: "/my-jobs", icon: BriefcaseIcon },
         { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
       ];
+      console.log("Header - getNavLinks: İşveren menüsü döndürülüyor:", employerLinks);
+      return employerLinks;
     }
     
     // İş arayan için menü öğeleri
-    return [
+    const jobseekerLinks = [
       ...commonLinks,
       { name: "Başvurularım", href: "/my-applications", icon: DocumentDuplicateIcon },
       { name: "Kaydedilen İlanlar", href: "/saved-jobs", icon: BookmarkIcon },
       { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
     ];
+    console.log("Header - getNavLinks: İş arayan menüsü döndürülüyor:", jobseekerLinks);
+    return jobseekerLinks;
   };
 
   // Kullanıcı rolüne göre menü öğelerini al
   const navigation = getNavLinks();
-
-  // İşveren kontrolü
-  const isEmployer = user?.user_type_id === "employer";
 
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -180,7 +205,7 @@ const Header = () => {
                 </Menu.Items>
               </Transition>
             </Menu>
-            {isEmployer && (
+            {isEmployer() && (
               <Link
                 to="/post-job"
                 className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
@@ -261,7 +286,7 @@ const Header = () => {
                       Kayıt Ol
                     </Link>
                   </>
-                ) : (
+                ) :
                   <>
                     <Link
                       to="/profile"
@@ -269,7 +294,7 @@ const Header = () => {
                     >
                       Profilim
                     </Link>
-                    {isEmployer && (
+                    {isEmployer() && (
                       <Link
                         to="/post-job"
                         className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
@@ -284,7 +309,7 @@ const Header = () => {
                       Çıkış Yap
                     </button>
                   </>
-                )}
+                }
               </div>
             </div>
           </div>

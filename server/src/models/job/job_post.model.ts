@@ -3,41 +3,71 @@ import mongoose from "mongoose";
 const JobPostSchema = new mongoose.Schema(
   {
     posted_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "UserAccount",
-      required: true,
+      type: String,
+      required: false,
     },
     job_type_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "JobType",
-      required: true,
+      type: String,
+      required: false,
     },
     company_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: true,
+      type: String,
+      required: false,
+    },
+    company_name: {
+      type: String,
+      required: false,
+    },
+    job_title: {
+      type: String,
+      required: false,
+    },
+    location_name: {
+      type: String,
+      required: false,
     },
     is_company_name_hidden: {
       type: Boolean,
-      required: true,
+      required: false,
     },
     created_date: {
       type: Date,
-      required: true,
+      required: false,
+      default: Date.now,
     },
     job_description: {
       type: String,
-      required: true,
+      required: false,
       length: 4000,
     },
     job_location_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "JobLocation",
-      required: true,
+      type: String,
+      required: false,
+    },
+    salary_range: {
+      type: String,
+      required: false,
+    },
+    required_skills: {
+      type: [String],
+      required: false,
+    },
+    contact_email: {
+      type: String,
+      required: false,
+    },
+    contact_phone: {
+      type: String,
+      required: false,
+    },
+    application_deadline: {
+      type: Date,
+      required: false,
     },
     is_active: {
       type: Boolean,
-      required: true,
+      required: false,
+      default: true,
     },
   },
   {

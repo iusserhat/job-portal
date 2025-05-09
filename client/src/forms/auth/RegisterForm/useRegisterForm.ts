@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import * as Yup from "yup";
 
 const FORM_INITIAL_VALUES = {
-  user_type_name: "job_seeker",
+  user_type_name: "jobseeker",
   email: "",
   password: "",
   confirmPassword: "",
@@ -31,21 +31,21 @@ const useRegisterForm = () => {
 
   const validationSchema = Yup.object({
     user_type_name: Yup.string()
-      .required("User type is required")
-      .oneOf(["job_seeker", "hr_recruiter"]),
+      .required("Hesap türü seçimi zorunludur")
+      .oneOf(["employer", "jobseeker"], "Geçerli bir hesap türü seçmelisiniz"),
     email: Yup.string()
-      .required("Email is required")
-      .email("Invalid email address"),
+      .required("E-posta adresi zorunludur")
+      .email("Geçerli bir e-posta adresi giriniz"),
     password: Yup.string()
-      .required("Password is required")
-      .min(8, "Password must be at least 8 characters")
-      .max(20, "Password must be at most 20 characters"),
+      .required("Şifre zorunludur")
+      .min(8, "Şifre en az 8 karakter olmalıdır")
+      .max(20, "Şifre en fazla 20 karakter olmalıdır"),
     confirmPassword: Yup.string()
-      .required("Confirm password is required")
-      .oneOf([Yup.ref("password")], "Passwords must match"),
+      .required("Şifre tekrarı zorunludur")
+      .oneOf([Yup.ref("password")], "Şifreler eşleşmiyor"),
     termsConditions: Yup.boolean().oneOf(
       [true],
-      "You must accept the terms and conditions"
+      "Kullanım şartlarını kabul etmelisiniz"
     ),
   });
 

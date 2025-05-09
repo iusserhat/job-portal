@@ -19,7 +19,7 @@ const LoginForm = () => {
             htmlFor="email"
             className="block text-sm font-medium leading-6 text-gray-900"
           >
-            Email address
+            E-posta adresi
             <span className="text-red-500">*</span>
           </label>
           <div className="mt-2">
@@ -43,7 +43,7 @@ const LoginForm = () => {
             htmlFor="password"
             className="block text-sm font-medium leading-6 text-gray-900"
           >
-            Password
+            Şifre
             <span className="text-red-500">*</span>
           </label>
           <div className="mt-2">
@@ -64,6 +64,39 @@ const LoginForm = () => {
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-medium leading-6 text-gray-900 mb-2">
+            Kullanıcı Tipi
+            <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div
+              className={`flex items-center justify-center rounded-md border ${
+                form.values.user_type_id === "jobseeker"
+                  ? "bg-indigo-50 border-indigo-600"
+                  : "border-gray-300"
+              } px-3 py-3 text-sm font-medium leading-4 hover:bg-gray-50 cursor-pointer`}
+              onClick={() => form.setFieldValue("user_type_id", "jobseeker")}
+            >
+              <span className={form.values.user_type_id === "jobseeker" ? "text-indigo-700" : "text-gray-900"}>
+                İş Arayan
+              </span>
+            </div>
+            <div
+              className={`flex items-center justify-center rounded-md border ${
+                form.values.user_type_id === "employer"
+                  ? "bg-indigo-50 border-indigo-600"
+                  : "border-gray-300"
+              } px-3 py-3 text-sm font-medium leading-4 hover:bg-gray-50 cursor-pointer`}
+              onClick={() => form.setFieldValue("user_type_id", "employer")}
+            >
+              <span className={form.values.user_type_id === "employer" ? "text-indigo-700" : "text-gray-900"}>
+                İşveren
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <input
@@ -76,7 +109,7 @@ const LoginForm = () => {
               htmlFor="remember-me"
               className="ml-3 block text-sm leading-6 text-gray-700"
             >
-              Remember me
+              Beni Hatırla
             </label>
           </div>
 
@@ -85,7 +118,7 @@ const LoginForm = () => {
               to="/forgot-password"
               className="font-semibold text-indigo-600 hover:text-indigo-500"
             >
-              Forgot password?
+              Şifremi Unuttum
             </Link>
           </div>
         </div>
@@ -96,7 +129,7 @@ const LoginForm = () => {
             className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             disabled={form.isSubmitting}
           >
-            Sign in
+            Giriş Yap
           </button>
         </div>
       </form>

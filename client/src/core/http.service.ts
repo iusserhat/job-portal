@@ -4,6 +4,9 @@ import { HttpMethod } from "@/enums";
 import { IService } from "@/interfaces";
 import StorageService from "./storage.service";
 
+/**
+ * HTTP service for making API requests.
+ */
 export default class HttpService {
   private http: AxiosInstance;
   private baseURL: string = import.meta.env.VITE_API_URL as string;
@@ -22,11 +25,30 @@ export default class HttpService {
     return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
   }
 
-  // Initialize service configuration
+  /**
+   * Returns a basic service object that works with localStorage for mock data.
+   * In a real application, this would be an actual HTTP client like Axios.
+   */
   public service() {
-    this.injectRequestInterceptor();
-
-    return this;
+    // Gerçek HTTP istekleri için Axios kullan
+    return {
+      get: <T>(url: string, config: any = {}) => {
+        console.log(`Gerçek GET isteği: ${this.baseURL}/${url}`, config);
+        return this.http.get<T>(`${url}`, config).then(response => response.data);
+      },
+      post: <T, U>(url: string, data: U, config: any = {}) => {
+        console.log(`Gerçek POST isteği: ${this.baseURL}/${url}`, data);
+        return this.http.post<T>(`${url}`, data, config).then(response => response.data);
+      },
+      put: <T, U>(url: string, data: U, config: any = {}) => {
+        console.log(`Gerçek PUT isteği: ${this.baseURL}/${url}`, data);
+        return this.http.put<T>(`${url}`, data, config).then(response => response.data);
+      },
+      delete: <T>(url: string, config: any = {}) => {
+        console.log(`Gerçek DELETE isteği: ${this.baseURL}/${url}`, config);
+        return this.http.delete<T>(`${url}`, config).then(response => response.data);
+      }
+    };
   }
 
   // Setup headers

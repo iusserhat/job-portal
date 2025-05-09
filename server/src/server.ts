@@ -1,4 +1,9 @@
 import Application from "./application";
+import { loadModels } from "./models";
+
+// Önce modelleri yükle
+console.log("🔧 Mongoose modellerini yükleme...");
+loadModels();
 
 const app = new Application();
 app.start();

@@ -8,6 +8,8 @@ import Routes from "./routes";
 import Seeders from "./seeders";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import passport from "passport";
+import { loadModels } from "./models";
+
 class Application {
   public server;
 
@@ -27,9 +29,27 @@ class Application {
   }
 
   private middlewares() {
-    this.server.use(cors());
+    this.server.use(cors({
+      origin: ['http://localhost:5137', 'http://localhost:3000', 'http://127.0.0.1:5137', '*'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+      exposedHeaders: ['Content-Length', 'Content-Type', 'Authorization']
+    }));
     this.server.use(express.json());
     this.server.use(express.urlencoded({ extended: true }));
+    
+    // CORS ön kontrol isteklerini her durumda kabul et
+    this.server.use((req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      
+      if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+      }
+      next();
+    });
   }
 
   private routes() {
@@ -61,6 +81,10 @@ class Application {
       .connect(MONGO_URL, {} as any)
       .then(async () => {
         console.log(`✅[Server]: Database is connected`);
+        
+        // Modelleri yükle - populate için gerekli
+        loadModels();
+        
         await Seeders.run();
       })
       .catch((error) => {

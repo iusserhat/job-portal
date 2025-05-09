@@ -1,33 +1,37 @@
-import { Application, Request, Response, NextFunction } from "express";
-import UsersRoutes from "./users.routes";
-import JobsRoutes from "./jobs.routes";
-import JobApplicationsRoutes from "./job-applications.routers";
+import express from "express";
 import AuthRoutes from "./auth.routes";
-import { StatusCodes } from "http-status-codes";
-import { ApiError } from "../errors/ApiError";
-import { authMiddleware } from "../middlewares/auth.middleware";
+import JobsRoutes from "./jobs.routes";
+import BasicJobsRoutes from "./basic-jobs.routes";
+import DirectJobsRoutes from "./direct-jobs.routes";
+import JobApplicationsRouter from "./job-applications.routes";
+import path from "path";
 
-export default class Routes {
-  constructor(app: Application) {
-    app.use("/api/v1/auth", new AuthRoutes().router);
-    app.use("/api/v1/jobs", authMiddleware, new JobsRoutes().router);
-    app.use("/api/v1/users", authMiddleware, new UsersRoutes().router);
-    app.use("/api/v1/job", authMiddleware, new JobApplicationsRoutes().router);
+class Routes {
+  constructor(server: express.Express) {
+    // API Routes
+    server.use("/api/v1/auth", new AuthRoutes().router);
+    server.use("/api/v1/jobs", new JobsRoutes().router);
+    
+    // Basic Jobs routes - Doğrudan router kullanacak
+    server.use("/api/v1/basic-jobs", BasicJobsRoutes);
+    
+    // Direct Jobs routes - MongoDB'ye doğrudan erişim için özel rotalar
+    server.use("/api/v1/direct-jobs", DirectJobsRoutes);
+    
+    // Job Applications routes - Burada direk router'ı kullanıyoruz
+    server.use("/api/v1/job-applications", JobApplicationsRouter);
 
-    app.get("/", (req: Request, res: Response) => {
-      res.status(StatusCodes.OK).send(`⚡️[Server]: Server is running!`);
-    });
+    // Frontend Build dosyaları için statik sunma
+    server.use(express.static(path.join(__dirname, "../../public")));
+    
+    // Public uploads klasörü
+    server.use('/uploads', express.static(path.join(__dirname, '../../public/uploads')));
 
-    app.get("/health", (req: Request, res: Response) => {
-      res.status(StatusCodes.OK).send(`⚡️[Server]: Server is running!`);
-    });
-
-    app.use("*", (req: Request, res: Response, next: NextFunction) => {
-      const error = new ApiError(
-        StatusCodes.NOT_FOUND,
-        `🔍[Server]: Route not found: ${req.originalUrl}`
-      );
-      next(error);
+    // Tüm diğer GET isteklerini index.html'e yönlendir (SPA desteği)
+    server.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "../../public/index.html"));
     });
   }
 }
+
+export default Routes;

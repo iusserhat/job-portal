@@ -1,23 +1,25 @@
-import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+import { Strategy as JwtStrategy, ExtractJwt, StrategyOptions } from "passport-jwt";
+import { PassportStatic } from "passport";
 import UserAccount from "../models/user/user-account.model";
 
-const options = {
+const options: StrategyOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET || "jwt_secret",
+  secretOrKey: process.env.JWT_SECRET || "jwt_secret"
 };
 
-module.exports = (passport: any) => {
+// JWT modülü
+module.exports = (passport: PassportStatic): void => {
   passport.use(
-    new JwtStrategy(options, async (jwt_payload, done) => {
-      UserAccount.findById(jwt_payload.id)
-        .then((user) => {
+    new JwtStrategy(options, (jwt_payload: any, done: any) => {
+      UserAccount.findById(jwt_payload._id || jwt_payload.id)
+        .then((user: any) => {
           if (user) {
             return done(null, user);
           }
           return done(null, false);
         })
-        .catch((err) => {
-          return done(err, false, { message: "Server error" });
+        .catch((err: Error) => {
+          return done(err, false);
         });
     })
   );

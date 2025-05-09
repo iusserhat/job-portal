@@ -3,6 +3,8 @@ import HomePage from "@/pages/HomePage";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import AppWrapper from "./AppWrapper";
 import { useAuth } from "./providers";
+import JobDetailPage from "./pages/JobDetailPage";
+import JobApplicationsPage from "./pages/JobApplicationsPage";
 
 const LoginPage = lazy(() => import("@/pages/AuthPages/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/AuthPages/RegisterPage"));
@@ -14,26 +16,46 @@ const SavedJobsPage = lazy(() => import("@/pages/SavedJobsPage"));
 const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const PostJobPage = lazy(() => import("@/pages/PostJobPage"));
-const JobDetailPage = lazy(() => import("@/pages/JobDetailPage"));
-const JobApplicationsPage = lazy(() => import("@/pages/JobApplicationsPage"));
-const MyApplicationsPage = lazy(() => import("@/pages/MyApplicationsPage"));
+
+// İşveren erişim kontrolü için özel bileşen
+const EmployerRoute = ({ element }) => {
+  const { isEmployer } = useAuth();
+  
+  // Kullanıcı işveren değilse ana sayfaya yönlendir
+  if (!isEmployer()) {
+    console.log("İşveren olmayan kullanıcı işveren sayfasına erişmeye çalıştı, yönlendiriliyor");
+    return <Navigate to="/" replace />;
+  }
+  
+  // İşveren ise sayfayı göster
+  return element;
+};
 
 function App() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isEmployer } = useAuth();
+  
   return (
     <BrowserRouter>
       {isAuthenticated ? (
         <Routes>
           <Route path="/" element={<AppWrapper />}>
             <Route index element={<HomePage />} />
-            <Route path="/my-jobs" element={<MyJobsPage />} />
-            <Route path="/saved-jobs" element={<SavedJobsPage />} />
+            
+            {/* İşveren sayfaları (sadece işveren rolüne sahip kullanıcılar erişebilir) */}
+            <Route path="/my-jobs" element={<EmployerRoute element={<MyJobsPage />} />} />
+            <Route path="/post-job" element={<EmployerRoute element={<PostJobPage />} />} />
+            <Route path="/job-applications/:jobId" element={<EmployerRoute element={<JobApplicationsPage />} />} />
+            
+            {/* İş arayan sayfaları */}
+            {!isEmployer() && <Route path="/saved-jobs" element={<SavedJobsPage />} />}
+            {!isEmployer() && <Route path="/my-applications" element={<MyApplicationsPage />} />}
+            
+            {/* Ortak sayfalar */}
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/post-job" element={<PostJobPage />} />
             <Route path="/job/:id" element={<JobDetailPage />} />
-            <Route path="/job-applications/:jobId" element={<JobApplicationsPage />} />
-            <Route path="/my-applications" element={<MyApplicationsPage />} />
+            
+            {/* Yönlendirmeler */}
             <Route path="/login" element={<Navigate to="/" />} />
             <Route path="/register" element={<Navigate to="/" />} />
             <Route path="/forgot-password" element={<Navigate to="/" />} />

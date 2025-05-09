@@ -6,20 +6,20 @@ import Logo from "@/components/core-ui/Logo";
 
 const RegisterPage = () => {
   return (
-    <PublicLayout title="Sign up">
+    <PublicLayout title="Kayıt Ol">
       <div className="mx-auto w-full max-w-sm lg:w-96">
         <div>
           <Logo />
           <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Sign up for an account
+            Yeni Hesap Oluştur
           </h2>
           <p className="mt-2 text-sm leading-6 text-gray-500">
-            Already have an account?{" "}
+            Zaten hesabınız var mı?{" "}
             <Link
               to="/login"
               className="font-semibold text-indigo-600 hover:text-indigo-500"
             >
-              Sign in
+              Giriş Yap
             </Link>
           </p>
         </div>

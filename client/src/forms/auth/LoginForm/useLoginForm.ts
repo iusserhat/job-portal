@@ -9,6 +9,7 @@ import * as Yup from "yup";
 const FORM_INITIAL_VALUES = {
   email: "",
   password: "",
+  user_type_id: "jobseeker",
 };
 
 const useLoginForm = () => {
@@ -22,12 +23,15 @@ const useLoginForm = () => {
 
   const validationSchema = Yup.object({
     email: Yup.string()
-      .required("Email is required")
-      .email("Invalid email address"),
+      .required("Email adresi gereklidir")
+      .email("Geçerli bir email adresi giriniz"),
     password: Yup.string()
-      .required("Password is required")
-      .min(8, "Password must be at least 8 characters")
-      .max(20, "Password must be at most 20 characters"),
+      .required("Şifre gereklidir")
+      .min(8, "Şifre en az 8 karakter olmalıdır")
+      .max(20, "Şifre en fazla 20 karakter olmalıdır"),
+    user_type_id: Yup.string()
+      .required("Kullanıcı tipi seçimi zorunludur")
+      .oneOf(["employer", "jobseeker"], "Geçerli bir kullanıcı tipi seçmelisiniz"),
   });
 
   const form = useFormik({
@@ -40,7 +44,9 @@ const useLoginForm = () => {
         const payload: ILoginPayload = {
           email: values.email,
           password: values.password,
+          user_type_id: values.user_type_id
         };
+        console.log("Login girişi:", payload);
         const { token, user } = await login(payload);
         setLogin(token, user);
         form.resetForm();

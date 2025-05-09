@@ -4,12 +4,48 @@ import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import PortalLayout from "@/components/layouts/portal/PortalLayout";
 import { useAuth } from "@/providers";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+
+// İş ilanı için tip tanımlaması
+interface JobPosting {
+  id: number;
+  jobTitle: string;
+  companyName: string;
+  location: string;
+  jobType: string;
+  createdAt: string;
+  salary: string;
+  requiredSkills: string[];
+  description: string;
+  isActive: boolean;
+  applicantsCount: number;
+  contact_email: string;
+  contact_phone: string;
+  application_deadline: string;
+}
+
+// Başvuru için tip tanımlaması
+interface JobApplication {
+  id: number;
+  jobId: number;
+  jobTitle: string;
+  companyName: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  coverLetter: string;
+  resume: string;
+  appliedAt: string;
+  status: string;
+}
 
 const JobDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const [job, setJob] = useState(null);
+  const [job, setJob] = useState<JobPosting | null>(null);
   const [loading, setLoading] = useState(true);
   const [applicationSuccess, setApplicationSuccess] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
@@ -25,103 +61,206 @@ const JobDetailPage = () => {
 
   // İlan detaylarını getir
   useEffect(() => {
-    const fetchJobDetail = () => {
+    const fetchJobDetail = async () => {
       try {
-        // LocalStorage'dan tüm ilanları al
-        const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
+        setLoading(true);
+        console.log("JobDetailPage - İlan detayları alınıyor, ID:", id);
         
-        // ID'ye göre ilanı bul
-        const foundJob = allJobs.find(job => job.id === Number(id));
+        // API'den iş ilanı detaylarını çek
+        const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/basic-jobs/${id}`;
+        console.log("API isteği gönderiliyor:", apiUrl);
         
-        if (foundJob) {
-          setJob(foundJob);
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+          console.error("API yanıtı alınamadı:", response.status, response.statusText);
+          throw new Error(`İş ilanı detayları alınamadı: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.success && data.data) {
+          console.log("MongoDB'den alınan iş ilanı detayı:", data.data);
+          
+          // MongoDB'den gelen veriyi formatla
+          const formattedJob = {
+            id: data.data._id,
+            jobTitle: data.data.job_title || "İsimsiz İlan",
+            companyName: data.data.company_name || "İsimsiz Şirket",
+            location: data.data.location_name || "Belirtilmemiş",
+            jobType: data.data.job_type_id?.name || "Belirtilmemiş",
+            createdAt: data.data.created_date || new Date().toISOString(),
+            salary: data.data.salary_range || "Belirtilmemiş",
+            requiredSkills: data.data.required_skills || [],
+            description: data.data.job_description || "",
+            isActive: data.data.is_active !== undefined ? data.data.is_active : true,
+            applicantsCount: 0, // Başvuru sayısı şimdilik 0 olarak belirle
+            contact_email: data.data.contact_email,
+            contact_phone: data.data.contact_phone,
+            application_deadline: data.data.application_deadline
+          };
+          
+          console.log("Formatlanmış iş ilanı detayı:", formattedJob);
+          setJob(formattedJob);
         } else {
-          // İlan bulunamadıysa anasayfaya yönlendir
-          navigate('/');
+          console.warn("MongoDB'den alınan veri formatı uyumsuz veya boş:", data);
+          throw new Error("İş ilanı detayları alınamadı");
         }
       } catch (error) {
         console.error("İş detayı alınırken hata:", error);
+        // İlan bulunamadıysa anasayfaya yönlendir
+        console.log("JobDetailPage - İlan bulunamadı");
+        navigate('/');
       } finally {
         setLoading(false);
       }
     };
 
     // Kullanıcının bu ilana daha önce başvurup başvurmadığını kontrol et
-    const checkIfApplied = () => {
+    const checkIfApplied = async () => {
       if (isAuthenticated && user) {
-        const applications = JSON.parse(localStorage.getItem('applications') || '[]');
-        const hasUserApplied = applications.some(app => 
-          app.jobId === Number(id) && app.userId === user.id
-        );
-        setHasApplied(hasUserApplied);
+        try {
+          // Burada API üzerinden kullanıcının bu ilana başvuru durumunu kontrol edebilirsiniz
+          // Şimdilik localStorage üzerinden kontrol ediyoruz
+          const applications: JobApplication[] = JSON.parse(localStorage.getItem('applications') || '[]');
+          
+          const hasUserApplied = applications.some(app => 
+            app.jobId.toString() === id && app.userId === user.id
+          );
+          
+          console.log("JobDetailPage - Kullanıcı daha önce başvurmuş mu:", hasUserApplied);
+          setHasApplied(hasUserApplied);
+        } catch (error) {
+          console.error("Başvuru kontrolü sırasında hata:", error);
+        }
       }
     };
 
-    // Yükleme efekti için kısa bir gecikme
-    setTimeout(() => {
-      fetchJobDetail();
-      checkIfApplied();
-    }, 1000);
+    fetchJobDetail();
+    checkIfApplied();
   }, [id, navigate, isAuthenticated, user]);
 
   // Başvuru gönderimi
-  const handleSubmit = (values, { resetForm }) => {
+  const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     try {
-      // Başvuru nesnesini oluştur
-      const application = {
-        id: Date.now(),
-        jobId: Number(id),
-        jobTitle: job.jobTitle,
-        companyName: job.companyName,
-        userId: user?.id || 'guest',
+      console.log("JobDetailPage - Yeni başvuru oluşturuluyor");
+      
+      if (!job) {
+        console.error("JobDetailPage - Başvuru yapılacak iş ilanı bulunamadı");
+        toast.error("Başvuru yapılacak iş ilanı bulunamadı.");
+        return;
+      }
+      
+      // Başvuru verilerini hazırla
+      const applicationData = {
+        job_id: id,
         name: values.name,
         email: values.email,
         phone: values.phone,
-        coverLetter: values.coverLetter,
-        resume: values.resume,
-        appliedAt: new Date().toISOString().split('T')[0],
-        status: 'pending' // pending, reviewed, accepted, rejected
+        cover_letter: values.coverLetter
       };
-
-      // Mevcut başvuruları localStorage'dan al
-      const existingApplications = JSON.parse(localStorage.getItem('applications') || '[]');
       
-      // Yeni başvuruyu listeye ekle
-      existingApplications.push(application);
+      console.log("Gönderilecek başvuru verileri:", applicationData);
       
-      // Tüm başvuruları localStorage'a kaydet
-      localStorage.setItem('applications', JSON.stringify(existingApplications));
-
-      // Başvuru sayısını güncelle
-      const allJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
-      const updatedJobs = allJobs.map(j => 
-        j.id === Number(id) 
-          ? {...j, applicantsCount: (j.applicantsCount || 0) + 1} 
-          : j
-      );
-      localStorage.setItem('allJobs', JSON.stringify(updatedJobs));
-
-      // MyJobs için de güncelle
-      const myJobs = JSON.parse(localStorage.getItem('myJobs') || '[]');
-      const updatedMyJobs = myJobs.map(j => 
-        j.id === Number(id) 
-          ? {...j, applicantsCount: (j.applicantsCount || 0) + 1} 
-          : j
-      );
-      localStorage.setItem('myJobs', JSON.stringify(updatedMyJobs));
+      // Doğrudan başvuru API'sine istek gönder
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/direct-jobs/${id}/apply`;
+      console.log("Başvuru API URL:", apiUrl);
       
-      // Başvuru başarılı
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(applicationData)
+      });
+      
+      if (!response.ok) {
+        // API'den hata yanıtını ayrıştırma
+        let errorMessage = `Hata: ${response.status}`;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // JSON parse hatası durumunda orijinal hata mesajını kullan
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      console.log("Başvuru başarıyla gönderildi:", data);
+      
+      // UI'ı güncelle - Başvuru başarılı
       setApplicationSuccess(true);
       setHasApplied(true);
       resetForm();
       
-      // 3 saniye sonra başarı mesajını kaldır
+      // Başvuru sayısını güncelle
+      try {
+        const countApiUrl = `${import.meta.env.VITE_API_URL}/api/v1/direct-jobs/${id}/application-count`;
+        const countResponse = await fetch(countApiUrl);
+        if (countResponse.ok) {
+          const countData = await countResponse.json();
+          if (countData.success && countData.data && typeof countData.data.count === 'number') {
+            // Eğer job değişkeninde applicantsCount varsa, güncelle
+            if (job) {
+              job.applicantsCount = countData.data.count;
+            }
+          }
+        }
+      } catch (countError) {
+        console.error("Başvuru sayısı alınamadı:", countError);
+      }
+      
+      // Kullanıcıya bildirim göster
+      toast.success("Başvurunuz başarıyla gönderildi!", {
+        duration: 5000,
+        position: "top-center",
+        style: {
+          background: "#10B981",
+          color: "#fff"
+        },
+        icon: "👍"
+      });
+      
+      // Mevcut başvuruları localStorage'dan al ve güncelle (önbellek için)
+      try {
+        let existingApplications = JSON.parse(localStorage.getItem('applications') || '[]');
+        
+        // Yeni başvuruyu ekle
+        const application = {
+          id: data.data._id,
+          jobId: id,
+          jobTitle: job.jobTitle,
+          companyName: job.companyName,
+          userId: user?._id || 'guest',
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          coverLetter: values.coverLetter,
+          resume: values.resume || '',
+          appliedAt: new Date().toISOString(),
+          status: 'pending'
+        };
+        
+        existingApplications.push(application);
+        localStorage.setItem('applications', JSON.stringify(existingApplications));
+      } catch (error) {
+        console.error("localStorage kullanımında hata:", error);
+      }
+      
+      // 2 saniye sonra başvuru formunu gizle, teşekkür mesajını göster
       setTimeout(() => {
-        setApplicationSuccess(false);
-      }, 3000);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 2000);
+      
     } catch (error) {
-      console.error("Başvuru yapılırken hata:", error);
-      alert("Başvuru yapılırken bir hata oluştu. Lütfen tekrar deneyin.");
+      console.error("Başvuru gönderilirken hata:", error);
+      toast.error(error instanceof Error ? error.message : "Başvuru gönderilirken bir hata oluştu");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -220,8 +359,17 @@ const JobDetailPage = () => {
             
             {applicationSuccess && (
               <div className="mt-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded" role="alert">
-                <p className="font-medium">Başvurunuz başarıyla gönderildi!</p>
-                <p className="text-sm">Başvurunuz değerlendirildikten sonra sizinle iletişime geçilecektir.</p>
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="font-medium">Başvurunuz başarıyla gönderildi!</p>
+                    <p className="text-sm mt-1">Başvurunuz değerlendirildikten sonra sizinle iletişime geçilecektir. Bu iş ilanı için tekrar başvuramazsınız.</p>
+                  </div>
+                </div>
               </div>
             )}
             

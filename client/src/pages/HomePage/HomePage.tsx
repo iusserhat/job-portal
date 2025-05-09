@@ -9,123 +9,209 @@ import {
 import Divider from "@/components/core-ui/Divider";
 import PortalLayout from "@/components/layouts/portal/PortalLayout";
 import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
+
+// İş ilanı için tip tanımlaması
+interface JobPosting {
+  id: number | string;
+  _id?: string; // MongoDB id'si
+  jobTitle: string;
+  companyName: string;
+  location: string;
+  jobType: string;
+  createdAt: string;
+  salary: string;
+  requiredSkills: string[];
+  description: string;
+  isActive: boolean;
+  applicantsCount?: number;
+  
+  // MongoDB'den gelen alanlar
+  job_title?: string;
+  company_name?: string;
+  location_name?: string;
+  job_description?: string;
+  salary_range?: string;
+  required_skills?: string[];
+  created_date?: string;
+  is_active?: boolean;
+}
 
 const HomePage = () => {
-  const [recentJobs, setRecentJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [recentJobs, setRecentJobs] = useState<JobPosting[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Örnek iş ilanları verisi
-  const sampleJobs = [
-    {
-      id: 1,
-      jobTitle: "Yazılım Geliştirici",
-      companyName: "Bandırma Teknoloji",
-      location: "Merkez",
-      jobType: "Tam Zamanlı",
-      createdAt: "2024-04-15",
-      salary: "15.000₺ - 25.000₺",
-      requiredSkills: ["React", "Node.js", "MongoDB"],
-      description: "Bandırma merkezli teknoloji şirketimiz için full-stack geliştirici arıyoruz...",
-      isActive: true
-    },
-    {
-      id: 2,
-      jobTitle: "Satış Temsilcisi",
-      companyName: "ABC Pazarlama",
-      location: "Erdek",
-      jobType: "Yarı Zamanlı",
-      createdAt: "2024-04-14",
-      salary: "Asgari Ücret + Prim",
-      requiredSkills: ["İletişim", "Satış Deneyimi", "MS Office"],
-      description: "Erdek'teki mağazamız için deneyimli satış temsilcileri arıyoruz...",
-      isActive: true
-    },
-    {
-      id: 3,
-      jobTitle: "Garson",
-      companyName: "Sahil Restaurant",
-      location: "Merkez",
-      jobType: "Tam Zamanlı",
-      createdAt: "2024-04-10", 
-      salary: "Asgari Ücret",
-      requiredSkills: ["Servis Deneyimi", "İletişim"],
-      description: "Sahil restoranımızda çalışacak tecrübeli garsonlar arıyoruz...",
-      isActive: true
-    },
-    {
-      id: 4,
-      jobTitle: "Muhasebe Uzmanı",
-      companyName: "XYZ Mali Müşavirlik",
-      location: "Merkez",
-      jobType: "Tam Zamanlı",
-      createdAt: "2024-04-08",
-      salary: "12.000₺ - 18.000₺",
-      requiredSkills: ["Luca", "ETA", "Muhasebe Deneyimi"],
-      description: "Mali müşavirlik ofisimiz için deneyimli muhasebe uzmanı arıyoruz...",
-      isActive: true
-    },
-    {
-      id: 5,
-      jobTitle: "Ön Büro Elemanı",
-      companyName: "Bandırma Otel",
-      location: "Merkez",
-      jobType: "Tam Zamanlı",
-      createdAt: "2024-04-12",
-      salary: "Belirtilmemiş",
-      requiredSkills: ["İngilizce", "Misafir İlişkileri", "Rezervasyon Sistemleri"],
-      description: "Otelimizin ön büro departmanında görevlendirilmek üzere takım arkadaşları arıyoruz...",
-      isActive: true
-    }
-  ];
-
-  // Sayfa yüklendiğinde verileri çek
   useEffect(() => {
-    // LocalStorage'dan ilanları al
-    const fetchJobs = () => {
-      try {
-        // LocalStorage'dan tüm ilanları al veya örnek verileri kullan
-        let storedJobs = JSON.parse(localStorage.getItem('allJobs') || '[]');
-        
-        // myJobs'dan da ilanları al ve birleştir
-        const myJobs = JSON.parse(localStorage.getItem('myJobs') || '[]');
-        
-        // Aynı ID'ye sahip ilanları önle (myJobs ilanları tercih et)
-        const allJobIds = new Set(storedJobs.map(job => job.id));
-        const newMyJobs = myJobs.filter(job => !allJobIds.has(job.id));
-        
-        if (newMyJobs.length > 0) {
-          storedJobs = [...newMyJobs, ...storedJobs];
-          localStorage.setItem('allJobs', JSON.stringify(storedJobs));
-        }
-        
-        // Eğer localStorage'da hiç ilan yoksa örnek verileri kullan
-        if (storedJobs.length === 0) {
-          // Örnek verileri localStorage'a kaydet
-          localStorage.setItem('allJobs', JSON.stringify(sampleJobs));
-          storedJobs = sampleJobs;
-        }
-        
-        // Sadece aktif ilanları göster ve en yeni ilanları başa al
-        const activeJobs = storedJobs
-          .filter(job => job.isActive !== false)
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
-        setRecentJobs(activeJobs);
-      } catch (error) {
-        console.error("İş ilanları alınırken hata:", error);
-        // Hata durumunda örnek verileri göster
-        setRecentJobs(sampleJobs);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Yükleme efekti için kısa bir gecikme
-    setTimeout(fetchJobs, 1000);
+    // Sayfa yüklendiğinde verileri getir
+    fetchJobs();
   }, []);
 
+  const fetchJobs = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Yeni API endpoint'i kullan - direct-jobs
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/direct-jobs`;
+      
+      console.log("İş ilanları çekiliyor:", apiUrl);
+      
+      try {
+        // CORS ve diğer sorunlar için headers ekle
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          // 15 saniye timeout ekleyelim
+          signal: AbortSignal.timeout(15000)
+        });
+        
+        console.log("API yanıtı durumu:", response.status);
+        
+        if (!response.ok) {
+          console.error("API yanıtı alınamadı:", response.status, response.statusText);
+          
+          // API hata mesajını almaya çalış
+          let errorDetail = "";
+          try {
+            const errorData = await response.json();
+            errorDetail = errorData.message || errorData.error || "";
+          } catch (e) {
+            // JSON olarak işlenemiyorsa text olarak okuyalım
+            try {
+              errorDetail = await response.text();
+            } catch (e2) {
+              errorDetail = "Detay yok";
+            }
+          }
+          
+          const errorMessage = `API'den veri çekilemedi: ${response.status} ${response.statusText} - ${errorDetail}`;
+          console.error(errorMessage);
+          setError(errorMessage);
+          toast.error("İş ilanları yüklenemedi");
+          throw new Error(errorMessage);
+        }
+        
+        let data;
+        try {
+          data = await response.json();
+          console.log("API'den alınan veri:", data);
+        } catch (jsonError) {
+          console.error("API yanıtı JSON olarak işlenemedi:", jsonError);
+          setError("API yanıtı işlenirken hata oluştu.");
+          toast.error("İş ilanları yüklenemedi - geçersiz veri formatı");
+          throw new Error("API yanıtı JSON olarak işlenemedi");
+        }
+        
+        if (data && Array.isArray(data)) {
+          // Doğrudan veri array olarak döndüyse
+          processJobData(data);
+        } 
+        else if (data && data.success && data.data && Array.isArray(data.data)) {
+          // API özel formatta döndüyse (success.data)
+          processJobData(data.data);
+        } else {
+          console.warn("API'den alınan veri formatı uyumsuz veya boş:", data);
+          setError("Veri formatı uyumsuz veya veri bulunamadı");
+          setRecentJobs([]);
+          toast.error("İş ilanları yüklenemedi");
+        }
+      } catch (fetchError: any) {
+        console.error("API isteği sırasında hata:", fetchError);
+        setError(`İş ilanları çekilemedi: ${fetchError.message || 'Bağlantı hatası'}`);
+        toast.error("İş ilanları yüklenemedi - bağlantı hatası");
+      }
+    } catch (error: any) {
+      console.error("İş ilanları getirme hatası:", error);
+      setError(`İş ilanları yüklenirken bir hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
+      setRecentJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // İş ilanı verilerini işle
+  const processJobData = (jobsData: any[]) => {
+    console.log(`${jobsData.length} iş ilanı işleniyor`);
+    
+    // MongoDB'den gelen veriyi formatla
+    const formattedJobs = jobsData.map((job: any) => ({
+      id: job._id, // MongoDB ID'sini id olarak kullan
+      _id: job._id, // Orijinal MongoDB ID'sini de sakla
+      jobTitle: job.job_title || "İsimsiz İlan",
+      companyName: job.company_name || "İsimsiz Şirket",
+      location: job.location_name || "Belirtilmemiş",
+      jobType: job.job_type_id?.name || "Belirtilmemiş",
+      createdAt: job.created_date || new Date().toISOString(),
+      salary: job.salary_range || "Belirtilmemiş",
+      requiredSkills: job.required_skills || [],
+      description: job.job_description || "",
+      isActive: job.is_active !== undefined ? job.is_active : true,
+      applicantsCount: 0, // Başvuru sayısı şimdilik 0 olarak belirle
+      
+      // MongoDB alanları da sakla
+      job_title: job.job_title,
+      company_name: job.company_name,
+      location_name: job.location_name,
+      job_description: job.job_description,
+      salary_range: job.salary_range,
+      required_skills: job.required_skills,
+      created_date: job.created_date,
+      is_active: job.is_active
+    }));
+    
+    console.log("Formatlanmış iş ilanları:", formattedJobs);
+    setRecentJobs(formattedJobs);
+
+    // Her iş ilanı için başvuru sayısını getir
+    formattedJobs.forEach(job => {
+      fetchApplicationCount(job.id);
+    });
+    
+    if (formattedJobs.length > 0) {
+      toast.success(`${formattedJobs.length} iş ilanı yüklendi`);
+    } else {
+      toast.success("Henüz iş ilanı bulunmuyor");
+    }
+  };
+
+  // Başvuru sayısını getirme
+  const fetchApplicationCount = async (jobId: string) => {
+    try {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/direct-jobs/${jobId}/application-count`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        return; // Sessizce başarısız ol
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        // Başvuru sayısını güncelle
+        setRecentJobs(prevJobs => 
+          prevJobs.map(job => 
+            job.id === jobId ? {...job, applicantsCount: data.data.count} : job
+          )
+        );
+      }
+    } catch (error) {
+      console.error(`İş ilanı ${jobId} için başvuru sayısı alınamadı:`, error);
+    }
+  };
+
   return (
-    <PortalLayout title="Bandırma İş Portalı">
+    <PortalLayout title="Ana Sayfa">
       <div className="bg-white">
         {/* Hero section */}
         <div className="relative isolate overflow-hidden pt-14">
@@ -215,6 +301,17 @@ const HomePage = () => {
               <p className="mt-2 text-lg leading-8 text-gray-600">
                 Bandırma ve çevresindeki en yeni iş fırsatlarını keşfedin
               </p>
+              {error && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+                  <p>{error}</p>
+                  <button
+                    onClick={fetchJobs}
+                    className="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                  >
+                    Yeniden Dene
+                  </button>
+                </div>
+              )}
             </div>
             
             {loading ? (
@@ -293,12 +390,12 @@ const HomePage = () => {
             )}
 
             <div className="mt-12 flex justify-center">
-              <a
-                href="#"
+              <button
+                onClick={fetchJobs}
                 className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-200 hover:bg-indigo-50"
               >
-                Tüm İlanları Görüntüle
-              </a>
+                İlanları Yenile
+              </button>
             </div>
           </div>
         </div>
