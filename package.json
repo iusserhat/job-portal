@@ -8,19 +8,19 @@
     "install:server": "cd server && npm install && cd ..",
     "install:client": "cd client && npm install && cd ..",
     "dev": "concurrently \"cd server && npm start\" \"cd client && npm run dev\"",
-    "build": "cd client && npm run build && cd .. && cd server && npm run build",
+    "build": "cd client && npm run build",
     "start": "cd server && npm run start",
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
-    "start:railway": "cd server && TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true ts-node --transpile-only --skip-project src/server.ts",
-    "railway:build": "cd client && npm install && npm run build && cd ../server && npm install",
-    "railway:deploy": "npm run railway:build && npm run start:railway"
+    "start:railway": "cd server && node -e \"process.env.TS_NODE_TRANSPILE_ONLY=true; process.env.TS_NODE_SKIP_PROJECT=true; require('ts-node').register({transpileOnly:true, skipProject:true}); require('./src/server.ts');\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5",
+    "ts-node": "^10.9.2"
   },
   "engines": {
     "node": ">=18.0.0"
