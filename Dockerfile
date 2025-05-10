@@ -20,5 +20,5 @@ ENV TS_NODE_IGNORE_DIAGNOSTICS=true
 # Port
 EXPOSE 5555
 
-# ts-node ile çalıştır ve dekoratör desteğini aç
-CMD ["npx", "ts-node", "--transpile-only", "--experimentalDecorators", "--emitDecoratorMetadata", "src/server.ts"] 
+# ts-node ile çalıştır (doğru bayraklarla)
+CMD ["npx", "ts-node", "--transpile-only", "src/server.ts"] 
