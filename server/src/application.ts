@@ -68,8 +68,19 @@ class Application {
     // Ana rota işleyicisini ekle
     new Routes(this.server);
     
-    // Health check endpoint'i ekle - Bunu hata middleware'inden önce ekle
+    // Health check endpoint'i ekle - CORS başlıklarını ekleyelim ve tam URL yolu kullanarak
     this.server.get('/api/v1/health', (req, res) => {
+      // CORS başlıklarını ekle
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+      
+      // OPTIONS isteği gelirse hemen yanıt ver
+      if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+      }
+      
+      console.log("Health check isteği alındı");
       res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
     });
     
