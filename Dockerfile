@@ -1,20 +1,24 @@
-FROM node:18-alpine
+FROM node:16-alpine
 
-# Çalışma dizini
+# TypeScript projenin kök dizini
 WORKDIR /app
 
-# Sadece server klasörünü kopyala
-COPY server ./server
-
-# Server kurulumu
-WORKDIR /app/server
+# Bağımlılıkları kopyala ve yükle
+COPY server/package*.json ./
 RUN npm install
 
-# TypeScript derleme seçeneklerini ayarla
+# TypeScript ayarlarını ve kaynak kodunu kopyala
+COPY server/tsconfig.json ./
+COPY server/src ./src
+
+# Derleme ve çalıştırma ayarları
+ENV NODE_ENV=production
 ENV TS_NODE_TRANSPILE_ONLY=true
 ENV TS_NODE_SKIP_PROJECT=true
 ENV TS_NODE_IGNORE_DIAGNOSTICS=true
 
-# Portu belirle ve uygulamayı başlat
+# Port
 EXPOSE 5555
-CMD ["sh", "-c", "npx ts-node src/server.ts"] 
+
+# ts-node ile çalıştır ve dekoratör desteğini aç
+CMD ["npx", "ts-node", "--transpile-only", "--experimentalDecorators", "--emitDecoratorMetadata", "src/server.ts"] 

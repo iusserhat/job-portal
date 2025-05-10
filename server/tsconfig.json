@@ -3,14 +3,16 @@
     "target": "es2016",                                 
     "module": "commonjs",                               
     "moduleResolution": "node",
-    "outDir": "./dist",                
+    "outDir": "dist",                
     "esModuleInterop": true,                             
     "forceConsistentCasingInFileNames": true,            
     "strict": false,                                      
     "skipLibCheck": true,
-    "experimentalDecorators": true,
     "noImplicitAny": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
