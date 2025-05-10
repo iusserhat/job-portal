@@ -29,13 +29,26 @@ class Application {
   }
 
   private middlewares() {
+    // CORS ayarları
+    const allowedOrigins = ['http://localhost:5137', 'http://localhost:3000', 'http://127.0.0.1:5137', '*'];
+    
     this.server.use(cors({
-      origin: ['http://localhost:5137', 'http://localhost:3000', 'http://127.0.0.1:5137', '*'],
+      origin: function(origin, callback) {
+        // undefined origin'e izin ver (örn. doğrudan tarayıcı isteği)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.indexOf('*') !== -1) {
+          callback(null, true);
+        } else {
+          callback(null, true); // Geliştirme aşamasında tüm kaynaklara izin ver
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
       exposedHeaders: ['Content-Length', 'Content-Type', 'Authorization']
     }));
+    
     this.server.use(express.json());
     this.server.use(express.urlencoded({ extended: true }));
     
@@ -53,29 +66,36 @@ class Application {
   }
 
   private routes() {
+    // Ana rota işleyicisini ekle
     new Routes(this.server);
-    this.server.use(errorMiddleware);
-
-    // Health check endpoint'i ekle
+    
+    // Health check endpoint'i ekle - Bunu hata middleware'inden önce ekle
     this.server.get('/api/v1/health', (req, res) => {
       res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
     });
+    
+    // En son hata middleware'ini ekle
+    this.server.use(errorMiddleware);
   }
 
   private initDirectories() {
-    // Public directory
-    if (!fs.existsSync(path.join(__dirname, "../public"))) {
-      fs.mkdirSync(path.join(__dirname, "../public"));
-    }
+    try {
+      // Public directory
+      if (!fs.existsSync(path.join(__dirname, "../public"))) {
+        fs.mkdirSync(path.join(__dirname, "../public"));
+      }
 
-    // Resume directory
-    if (!fs.existsSync(path.join(__dirname, "../public/resumes"))) {
-      fs.mkdirSync(path.join(__dirname, "../public/resumes"));
-    }
+      // Resume directory
+      if (!fs.existsSync(path.join(__dirname, "../public/resumes"))) {
+        fs.mkdirSync(path.join(__dirname, "../public/resumes"));
+      }
 
-    // Uploads directory
-    if (!fs.existsSync(path.join(__dirname, "../public/uploads"))) {
-      fs.mkdirSync(path.join(__dirname, "../public/uploads"));
+      // Uploads directory
+      if (!fs.existsSync(path.join(__dirname, "../public/uploads"))) {
+        fs.mkdirSync(path.join(__dirname, "../public/uploads"));
+      }
+    } catch (error) {
+      console.error("Dizin oluşturma hatası:", error);
     }
   }
 
@@ -99,7 +119,13 @@ class Application {
         // Modelleri yükle - populate için gerekli
         loadModels();
         
-        await Seeders.run();
+        try {
+          console.log(`🌱[Server]: Running seeders`);
+          await Seeders.run();
+          console.log(`✅[Server]: Seeders completed`);
+        } catch (seedError) {
+          console.error(`❌[Server]: Seeder error:`, seedError);
+        }
       })
       .catch((error) => {
         console.log(`❌[Server] Database connection error: ${error}`);
