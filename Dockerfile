@@ -1,26 +1,17 @@
 FROM node:18-alpine
 
-# Çalışma dizinini ayarla
+# Çalışma dizini
 WORKDIR /app
 
-# Global modülleri kur
-RUN npm install -g ts-node typescript
+# Tüm projeyi kopyala
+COPY . .
 
-# Önce package.json dosyasını kopyala
-COPY server/package.json .
+# Client build
+RUN cd client && npm install && npm run build
 
-# Bağımlılıkları yükle
-RUN npm install
+# Server hazırla
+RUN cd server && npm install
 
-# Kodları kopyala
-COPY server/src ./src
-COPY server/tsconfig.json .
-
-# Environment değişkenlerini ayarla
-ENV NODE_ENV=production
-ENV TS_NODE_TRANSPILE_ONLY=true
-ENV TS_NODE_SKIP_PROJECT=true
-
-# Uygulamayı başlat
+# Portu belirle ve uygulamayı başlat
 EXPOSE 5555
-CMD ["ts-node", "--transpile-only", "--skip-project", "src/server.ts"] 
+CMD ["sh", "-c", "cd server && TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true npx ts-node src/server.ts"] 
