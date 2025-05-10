@@ -39,11 +39,21 @@ class Application {
       'https://iusserhat-job-portal.netlify.app',
       'https://job-portal-frontend.netlify.app',
       'https://job-portal-client.netlify.app',
+      'https://serene-begonia-ded421.netlify.app', // Yeni Netlify domain
       '*'
     ];
     
     this.server.use(cors({
-      origin: '*', // Tüm kaynaklara izin ver
+      origin: function(origin, callback) {
+        // undefined origin'e izin ver (Postman gibi araçlar için)
+        if(!origin) return callback(null, true);
+        
+        if(allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+          callback(null, true);
+        } else {
+          callback(new Error('CORS policy: Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
@@ -67,18 +77,34 @@ class Application {
   }
 
   private setupHealthChecks() {
+    // Health check endpoint'leri ayarla
     // Health check endpoint'i - Backend'in sağlık durumunu kontrol eder
     this.server.get('/api/v1/health', (req, res) => {
+      // CORS başlıklarını ekle
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      
       return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
     });
     
     // Root endpoint'i için health check
     this.server.get('/', (req, res) => {
+      // CORS başlıklarını ekle
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      
       return res.status(200).json({ status: 'ok', message: 'API is running', timestamp: new Date().toISOString() });
     });
     
     // Render özel health check endpoint'i
     this.server.get('/health', (req, res) => {
+      // CORS başlıklarını ekle
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      
       return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
     });
   }
