@@ -81,9 +81,18 @@ class Application {
 
   private database() {
     const MONGO_URL: string = process.env.MONGO_URL || "";
+    console.log(`MongoDB bağlantısı kuruluyor: ${MONGO_URL.substring(0, 20)}...`);
+
+    // MongoDB bağlantı seçenekleri
+    const mongooseOptions: any = {
+      serverSelectionTimeoutMS: process.env.MONGO_CONNECT_TIMEOUT ? parseInt(process.env.MONGO_CONNECT_TIMEOUT) : 30000,
+      socketTimeoutMS: process.env.MONGO_SOCKET_TIMEOUT ? parseInt(process.env.MONGO_SOCKET_TIMEOUT) : 45000,
+      retryWrites: true,
+      w: 'majority'
+    };
 
     mongoose
-      .connect(MONGO_URL, {} as any)
+      .connect(MONGO_URL, mongooseOptions)
       .then(async () => {
         console.log(`✅[Server]: Database is connected`);
         

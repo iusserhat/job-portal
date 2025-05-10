@@ -17,8 +17,11 @@ COPY server/src ./src
 # Önceden TypeScript kodunu JavaScript'e derle
 RUN tsc || echo "TypeScript compile failed, but continuing..."
 
-# Derleme ve çalıştırma ayarları
+# API-only mod ve MongoDB yapılandırması
 ENV NODE_ENV=production
+ENV API_ONLY=true
+ENV MONGO_CONNECT_TIMEOUT=30000
+ENV MONGO_SOCKET_TIMEOUT=45000
 
 # Port
 EXPOSE 5555
