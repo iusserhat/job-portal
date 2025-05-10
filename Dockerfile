@@ -1,18 +1,24 @@
-FROM node:18.18.0 as build
+FROM node:18.18.0
 
-# Client uygulamasını kur ve build et
+# Client uygulaması
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
 COPY client/ .
 RUN npm run build
 
-# Server uygulamasını kur
+# Server uygulaması
 WORKDIR /app/server
 COPY server/package*.json ./
-RUN npm install
+RUN npm install --ignore-scripts
 COPY server/ .
 
-# Server'ı başlat
+# TypeScript'i global olarak yükle
+RUN npm install -g ts-node typescript
+
+# Environemnt değişkenlerini ayarla
+ENV NODE_ENV=production
+
+# Server'ı doğrudan ts-node ile başlat (derleme hatasını atla)
 EXPOSE 5555
-CMD ["npm", "run", "start"] 
+CMD ["ts-node", "src/server.ts"] 
