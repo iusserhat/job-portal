@@ -19,4 +19,8 @@ export default defineConfig({
       "@": fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // TypeScript derleme hatalarını görmezden gel
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+  }
 });
