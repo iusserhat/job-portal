@@ -41,141 +41,112 @@ const MyJobsPage = () => {
     setError(null);
 
     try {
-      // Mock veri - API çalışmadığında kullanılacak
-      const mockJobs = [
-        {
-          id: "job1",
-          _id: "job1",
-          jobTitle: "Yazılım Geliştirici",
-          companyName: "Teknoloji Ltd.",
-          location: "Bandırma",
-          jobType: "Tam Zamanlı",
-          createdAt: new Date().toISOString(),
-          applicantsCount: 12,
-          isActive: true
-        },
-        {
-          id: "job2",
-          _id: "job2",
-          jobTitle: "Satış Temsilcisi",
-          companyName: "Satış A.Ş.",
-          location: "Bandırma",
-          jobType: "Yarı Zamanlı",
-          createdAt: new Date().toISOString(),
-          applicantsCount: 5,
-          isActive: true
-        },
-        {
-          id: "job3",
-          _id: "job3",
-          jobTitle: "Muhasebeci",
-          companyName: "Finans Ltd.",
-          location: "Bandırma",
-          jobType: "Tam Zamanlı",
-          createdAt: new Date().toISOString(),
-          applicantsCount: 3,
-          isActive: false
-        }
-      ];
+      // API URL'ini belirle
+      const apiUrl = "http://localhost:5555/api/v1/jobs/user-jobs";
+      console.log("Kullanıcı ilanları çekiliyor:", apiUrl);
+      
+      // Local storage'dan JWT token'ı al
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        console.error("Token bulunamadı, kullanıcı giriş yapmamış olabilir");
+        setError("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
+        setJobs([]);
+        setLoading(false);
+        return;
+      }
+      
+      // API isteği için başlıkları oluştur
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}` // JWT token'ı ekle
+      };
 
-      try {
-        // API'den kullanıcının kendi ilanlarını çek
-        const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/jobs/user-jobs`;
-        console.log("Kullanıcı ilanları çekiliyor:", apiUrl);
+      // Backend'e istek gönder
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers,
+        // İstek zaman aşımı 15 saniye
+        signal: AbortSignal.timeout(15000)
+      });
+      
+      // HTTP durum kodunu kontrol et
+      console.log("HTTP durum kodu:", response.status);
+      
+      if (!response.ok) {
+        console.error("API yanıtı alınamadı:", response.status, response.statusText);
         
-        // API isteği için başlıkları oluştur
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        };
-
-        // Backend'e istek gönder
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers,
-          // İstek zaman aşımı 15 saniye
-          signal: AbortSignal.timeout(15000)
-        });
-        
-        // HTTP durum kodunu kontrol et
-        console.log("HTTP durum kodu:", response.status);
-        
-        if (!response.ok) {
-          console.error("API yanıtı alınamadı:", response.status, response.statusText);
-          
-          // API hata mesajını almaya çalış
-          let errorDetail = "";
-          try {
-            const errorData = await response.json();
-            errorDetail = errorData.message || errorData.error || "";
-          } catch (e) {
-            try {
-              errorDetail = await response.text();
-            } catch (e2) {
-              errorDetail = "Detay yok";
-            }
-          }
-          
-          console.error(`İlanlar alınamadı: ${response.status} ${response.statusText} - ${errorDetail}`);
-          
-          // API yanıtı alınamadığında mock veri göster
-          console.log("API çalışmadığı için mock veri gösteriliyor");
-          setJobs(mockJobs);
+        // Yetkilendirme hatası ise
+        if (response.status === 401) {
+          setError("Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.");
           return;
         }
         
-        let data;
+        // API hata mesajını almaya çalış
+        let errorDetail = "";
         try {
-          data = await response.json();
-          console.log("API yanıtı:", data);
-        } catch (jsonError) {
-          console.error("API yanıtı JSON olarak işlenemedi:", jsonError);
-          setJobs(mockJobs);
-          return;
+          const errorData = await response.json();
+          errorDetail = errorData.message || errorData.error || "";
+        } catch (e) {
+          try {
+            errorDetail = await response.text();
+          } catch (e2) {
+            errorDetail = "Detay yok";
+          }
         }
         
-        if (data && data.success && data.data && Array.isArray(data.data)) {
-          console.log("MongoDB'den alınan kullanıcı ilanları:", data.data.length);
+        console.error(`İlanlar alınamadı: ${response.status} ${response.statusText} - ${errorDetail}`);
+        setError("İlanlarınız yüklenirken bir hata oluştu: " + errorDetail);
+        return;
+      }
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log("API yanıtı:", data);
+      } catch (jsonError) {
+        console.error("API yanıtı JSON olarak işlenemedi:", jsonError);
+        setError("API yanıtı beklendiği gibi değil.");
+        return;
+      }
+      
+      if (data && data.success && data.data && Array.isArray(data.data)) {
+        console.log("MongoDB'den alınan kullanıcı ilanları:", data.data.length);
+        
+        // MongoDB'den gelen veriyi formatla
+        const formattedJobs = data.data.map((job: any) => ({
+          id: job._id,
+          _id: job._id,
+          jobTitle: job.job_title || "İsimsiz İlan",
+          companyName: job.company_name || "İsimsiz Şirket",
+          location: job.location_name || "Belirtilmemiş",
+          jobType: job.job_type_id?.name || "Belirtilmemiş",
+          createdAt: job.created_date || new Date().toISOString(),
+          applicantsCount: job.applications_count || 0,
+          isActive: job.is_active !== undefined ? job.is_active : true,
           
-          // MongoDB'den gelen veriyi formatla
-          const formattedJobs = data.data.map((job: any) => ({
-            id: job._id,
-            _id: job._id,
-            jobTitle: job.job_title || "İsimsiz İlan",
-            companyName: job.company_name || "İsimsiz Şirket",
-            location: job.location_name || "Belirtilmemiş",
-            jobType: job.job_type_id?.name || "Belirtilmemiş",
-            createdAt: job.created_date || new Date().toISOString(),
-            applicantsCount: job.applications_count || 0,
-            isActive: job.is_active !== undefined ? job.is_active : true,
-            
-            // Orijinal alanları da sakla
-            job_title: job.job_title,
-            company_name: job.company_name,
-            location_name: job.location_name,
-            is_active: job.is_active
-          }));
-          
-          console.log("Formatlanmış kullanıcı ilanları:", formattedJobs);
-          
-          if (formattedJobs.length > 0) {
-            setJobs(formattedJobs);
-            toast.success(`${formattedJobs.length} ilan başarıyla yüklendi`);
-          } else {
-            console.log("İlan bulunamadı, boş dizi döndü");
-            setJobs([]);
-          }
+          // Orijinal alanları da sakla
+          job_title: job.job_title,
+          company_name: job.company_name,
+          location_name: job.location_name,
+          is_active: job.is_active
+        }));
+        
+        console.log("Formatlanmış kullanıcı ilanları:", formattedJobs);
+        
+        if (formattedJobs.length > 0) {
+          setJobs(formattedJobs);
+          toast.success(`${formattedJobs.length} ilan başarıyla yüklendi`);
         } else {
-          console.warn("MongoDB'den alınan veri formatı uyumsuz veya boş:", data);
-          // API yanıtı boş veya geçersiz ise mock veri göster
-          console.log("API yanıtı geçersiz, mock veri gösteriliyor");
-          setJobs(mockJobs);
+          console.log("İlan bulunamadı, boş dizi döndü");
+          setJobs([]);
+          toast.info("Henüz bir iş ilanı yayınlamamışsınız");
         }
-      } catch (apiError) {
-        console.error("API isteği başarısız:", apiError);
-        console.log("API hatası, mock veri gösteriliyor");
-        // API hatası durumunda mock veri göster
-        setJobs(mockJobs);
+      } else {
+        console.warn("MongoDB'den alınan veri formatı uyumsuz veya boş:", data);
+        setError("Veriler beklenen formatta değil");
+        setJobs([]);
       }
     } catch (error) {
       console.error("İş ilanları alınırken hata:", error);
@@ -199,24 +170,50 @@ const MyJobsPage = () => {
       
       const newStatus = !job.isActive;
       
+      // Local storage'dan JWT token'ı al
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        toast.error("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
+        return;
+      }
+      
       // API'ye güncelleme isteği gönder
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/jobs/${jobId}`;
+      const apiUrl = `http://localhost:5555/api/v1/jobs/${jobId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          // Token artık gerekli değil
-          // 'Authorization': token ? `Bearer ${token}` : ''
+          'Authorization': `Bearer ${token}` // JWT token'ı ekle
         },
         body: JSON.stringify({
           is_active: newStatus
-        }),
-        credentials: 'include'
+        })
       });
       
       if (!response.ok) {
-        throw new Error(`İlan durumu güncellenemedi: ${response.status} ${response.statusText}`);
+        // Yetkilendirme hatası ise
+        if (response.status === 401) {
+          toast.error("Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.");
+          return;
+        }
+        
+        // API hata mesajını almaya çalış
+        let errorDetail = "";
+        try {
+          const errorData = await response.json();
+          errorDetail = errorData.message || errorData.error || "";
+        } catch (e) {
+          // JSON olarak işlenemiyorsa text olarak okuyalım
+          try {
+            errorDetail = await response.text();
+          } catch (e2) {
+            errorDetail = "Detay yok";
+          }
+        }
+        
+        throw new Error(`İlan durumu güncellenemedi: ${response.status} ${response.statusText} - ${errorDetail}`);
       }
       
       // UI'ı güncelle
@@ -341,6 +338,7 @@ const MyJobsPage = () => {
                         to={`/job-applications/${job._id || job.id}`} 
                         className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         title="Başvuruları görüntüle"
+                        onClick={() => console.log("Başvuru linkine tıklandı, jobId:", job._id || job.id)}
                       >
                         <span className="relative flex h-3 w-3 mr-1">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>

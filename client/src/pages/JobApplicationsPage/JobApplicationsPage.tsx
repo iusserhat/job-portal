@@ -40,6 +40,9 @@ const JobApplicationsPage = () => {
   const [loading, setLoading] = useState(true);
   const { user, isAuthenticated } = useAuth();
   
+  // Debug useParams hook'unu
+  console.log("JobApplicationsPage - useParams jobId:", jobId);
+  
   // Statü renkleri
   const statusColors = {
     pending: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Beklemede" },
@@ -51,10 +54,27 @@ const JobApplicationsPage = () => {
 
   // Sayfa yüklendiğinde verileri çek
   useEffect(() => {
+    console.log("JobApplicationsPage - useEffect tetiklendi");
+    console.log("JobApplicationsPage - İşveren kontrolü:", user?.user_type_id);
+    
+    // JobID parametresi kontrolü
+    if (!jobId) {
+      console.error("JobApplicationsPage - jobId parametresi bulunamadı");
+      toast.error("İlan ID bulunamadı");
+      navigate('/my-jobs');
+      return;
+    }
+    
     // Güvenlik kontrolü - işveren hesabı değilse ana sayfaya yönlendir
-    if (isAuthenticated && user && user.user_type_id !== "employer") {
+    if (isAuthenticated && user && user.user_type_id !== "employer" && user.user_type_id !== "hr_recruiter" && user.user_type_id !== "681c883d3ccf9279e0d27874") {
       toast.error("Bu sayfa sadece işveren hesaplarına açıktır");
       navigate('/');
+      return;
+    }
+    
+    if (!isAuthenticated) {
+      toast.error("Bu sayfayı görüntülemek için giriş yapmalısınız");
+      navigate('/login');
       return;
     }
     
@@ -99,7 +119,7 @@ const JobApplicationsPage = () => {
       
       // API'den iş ilanı detaylarını al
       const token = localStorage.getItem('access_token');
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/jobs/${jobId}`;
+      const apiUrl = `http://localhost:5555/api/v1/jobs/${jobId}`;
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -144,28 +164,27 @@ const JobApplicationsPage = () => {
     try {
       // API'den başvuruları al
       const token = localStorage.getItem('access_token');
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/jobs/${jobId}/applications`;
+      // MongoDB'de kayıtlı başvuruları almak için doğrudan job_applications koleksiyonuna erişiyoruz
+      const apiUrl = `http://localhost:5555/api/v1/direct-jobs/${jobId}/applications`;
       
       console.log("JobApplicationsPage - Başvurular çekiliyor:", apiUrl);
+      console.log("JobApplicationsPage - İlan ID değeri:", jobId);
       console.log("JobApplicationsPage - Kullanıcı ID:", user?._id);
       console.log("JobApplicationsPage - Kullanıcı türü:", user?.user_type_id);
       console.log("JobApplicationsPage - Token var mı:", !!token);
       
-      /*
-      // Token kontrolü normal modda açılacak
+      // Token kontrolü
       if (!token) {
         toast.error("Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.");
         setTimeout(() => navigate('/login'), 2000);
         return;
       }
-      */
       
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // DEBUG: Auth header kaldırıldı
-          // 'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
         }
       });
@@ -198,13 +217,13 @@ const JobApplicationsPage = () => {
       console.log("JobApplicationsPage - API yanıtı:", data);
       console.log("JobApplicationsPage - API yanıtı verileri:", JSON.stringify(data.data, null, 2));
       
-      if (data.success && data.data) {
+      if (data.success) {
         // Başvuruları ayarla ve göster
-        setApplications(data.data);
-        console.log(`JobApplicationsPage - ${data.data.length} başvuru yüklendi`);
+        setApplications(data.data || []);
+        console.log(`JobApplicationsPage - ${data.data ? data.data.length : 0} başvuru yüklendi`);
         
         // Daha detaylı başvuru bilgilerini logla
-        if (data.data.length > 0) {
+        if (data.data && data.data.length > 0) {
           console.log("JobApplicationsPage - Tüm başvuru detayları:", data.data);
           data.data.forEach((app, index) => {
             console.log(`JobApplicationsPage - Başvuru #${index + 1} detayları:`, {
@@ -227,7 +246,7 @@ const JobApplicationsPage = () => {
         if (job) {
           setJob({
             ...job,
-            applicantsCount: data.data.length
+            applicantsCount: data.data ? data.data.length : 0
           });
         }
         
@@ -262,7 +281,7 @@ const JobApplicationsPage = () => {
     try {
       // API'ye güncelleme isteği gönder
       const token = localStorage.getItem('access_token');
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/applications/${applicationId}`;
+      const apiUrl = `http://localhost:5555/api/v1/applications/${applicationId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
@@ -324,14 +343,15 @@ const JobApplicationsPage = () => {
   }
 
   return (
-    <PortalLayout title={`Başvurular: ${job.jobTitle}`}>
+    <PortalLayout title={`Başvurular: ${job?.jobTitle || 'Yükleniyor...'}`}>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
+        {console.log("JobApplicationsPage - Sayfa render ediliyor, job:", job, "applications:", applications)}
         {/* Üst bilgi kısmı */}
         <div className="pb-5 border-b border-gray-200 mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">{job.jobTitle} - Başvurular</h1>
+            <h1 className="text-xl font-semibold text-gray-900">{job?.jobTitle || 'İlan'} - Başvurular</h1>
             <p className="mt-2 text-sm text-gray-700">
-              {job.companyName} - {job.location} - {job.jobType}
+              {job?.companyName || 'Şirket'} - {job?.location || 'Konum'} - {job?.jobType || 'İş Türü'}
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex gap-2">

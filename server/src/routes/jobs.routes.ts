@@ -19,10 +19,15 @@ export default class JobsRoutes {
     this.router.get("/", asyncWrapper(JobsController.getJobs));
     
     // Kullanıcının kendi ilanlarını alma - GEÇİCİ OLARAK authenticate kaldırıldı
-    this.router.get("/user-jobs", asyncWrapper(JobsController.getUserJobs));
+    // Artık JWT kontrolü ile korunuyor
+    this.router.get(
+      "/user-jobs", 
+      authenticate, 
+      asyncWrapper(JobsController.getUserJobs)
+    );
     
-    // İlan oluşturma - Yetkilendirme kontrolünü geçici olarak kaldırdık
-    this.router.post("/", asyncWrapper(JobsController.createJob));
+    // İlan oluşturma - Yetkilendirme kontrolü ile korunuyor
+    this.router.post("/", authenticate, asyncWrapper(JobsController.createJob));
     
     // Belirli bir iş ilanı detayını alma - Herkes erişebilir
     this.router.get("/:job_id", asyncWrapper(JobsController.getJob));

@@ -27,9 +27,9 @@ class Routes {
     
     // İş ilanı başvuruları için özel route - bunu jobs rotasına bağlıyoruz
     server.get("/api/v1/jobs/:job_id/applications", 
+      authMiddleware,
       (req: Request, res: Response, next: NextFunction) => {
         console.log("DEBUG: Başvurular isteniyor, API: /api/v1/jobs/:job_id/applications");
-        // authMiddleware devre dışı bırakıldı
         JobApplicationsController.getJobApplications(req as RequestWithUser, res, next);
       });
     

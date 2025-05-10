@@ -4,6 +4,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import PortalLayout from "@/components/layouts/portal/PortalLayout";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/providers";
 
 // İlan oluşturma formu için doğrulama şeması
 const validationSchema = Yup.object().shape({
@@ -30,6 +31,7 @@ const initialValues = {
 const PostJobPage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isAuthenticated, user } = useAuth();
 
   // Form gönderimi
   const handleSubmit = async (values: any, { resetForm }: any) => {
@@ -37,6 +39,15 @@ const PostJobPage = () => {
     
     try {
       console.log("PostJobPage - İş ilanı oluşturuluyor:", values);
+      
+      // JWT token'ı kontrol et
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        toast.error("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
+        setTimeout(() => navigate('/login'), 1500);
+        return;
+      }
       
       // Required skills'i diziye çevir
       let requiredSkills = [];
@@ -53,15 +64,16 @@ const PostJobPage = () => {
         required_skills: requiredSkills
       };
       
-      // Doğrudan API'ye istek gönder
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/direct-jobs`;
+      // JWT token kullanarak normal jobs API'yi çağır
+      const apiUrl = "http://localhost:5555/api/v1/jobs";
       
       console.log("API isteği gönderiliyor:", apiUrl);
       
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(jobData)
       });
@@ -98,6 +110,13 @@ const PostJobPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Sayfa yüklendiğinde kullanıcı giriş yapmadıysa login sayfasına yönlendir
+  if (!isAuthenticated) {
+    toast.error("Bu sayfaya erişmek için giriş yapmalısınız");
+    navigate('/login');
+    return null;
+  }
 
   return (
     <PortalLayout title="Yeni İş İlanı Oluştur">

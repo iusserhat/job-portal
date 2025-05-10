@@ -101,14 +101,13 @@ export default class JobsController {
         is_active
       } = req.body;
       
-      // Güvenlik kontrolünü geçici olarak devre dışı bırak
-      // if (!req.user?._id) {
-      //  throw new ApiError(StatusCodes.UNAUTHORIZED, "Kullanıcı girişi yapmalısınız");
-      // }
+      // Kullanıcı kimlik doğrulama kontrolü
+      if (!req.user?._id) {
+        throw new ApiError(StatusCodes.UNAUTHORIZED, "Kullanıcı girişi yapmalısınız");
+      }
       
-      // Geçici olarak geçerli bir MongoDB ObjectId kullan
-      // MongoDB ObjectId formatında geçerli bir ID (24 karakter hexadecimal)
-      const posted_by = req.user?._id || "507f1f77bcf86cd799439011";
+      // Kimliği doğrulanmış kullanıcının ID'sini kullan
+      const posted_by = req.user._id;
       
       console.log("İş ilanı oluşturuluyor:", {
         posted_by,
@@ -282,11 +281,19 @@ export default class JobsController {
   ) {
     try {
       console.log("getUserJobs API çağrıldı");
-      console.log("Request user:", req.user);
-      console.log("Authorization header:", req.headers.authorization);
       
-      // Kullanıcı kimlik doğrulama kontrollerini kaldırdık
-      // Tüm ilanları getiriyoruz
+      // Kullanıcı kimlik doğrulama kontrolü yapılıyor
+      if (!req.user || !req.user._id) {
+        console.error("getUserJobs: Kullanıcı kimliği doğrulanamadı");
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          success: false,
+          message: "Bu işlem için giriş yapmanız gerekiyor"
+        });
+      }
+      
+      // JWT token'dan gelen kullanıcı ID'sini al
+      const user_id = req.user._id;
+      console.log(`getUserJobs: ${user_id} ID'li kullanıcı için ilanlar getiriliyor`);
       
       const { page = 1, limit = 10 } = req.query;
       
@@ -296,13 +303,13 @@ export default class JobsController {
       
       // MongoDB aggregation ile başvuru sayılarını da getir
       const jobs = await JobPost.aggregate([
-        // İlanları filtrele - tüm ilanları getir, filtreleme yapma
-        // {
-        //   $match: {
-        //     // Aktif kullanıcıya ait ilanları getir
-        //     // posted_by: new mongoose.Types.ObjectId(user_id)
-        //   }
-        // },
+        // İlanları filtrele - sadece giriş yapan kullanıcıya ait ilanları getir
+        {
+          $match: {
+            // Aktif kullanıcıya ait ilanları getir
+            posted_by: user_id.toString()
+          }
+        },
         // Başvurular collection'ı ile join işlemi
         {
           $lookup: {
@@ -330,10 +337,10 @@ export default class JobsController {
         { $limit: limitNum }
       ]);
       
-      console.log(`${jobs.length} ilan bulundu`);
+      console.log(`${jobs.length} ilan bulundu (kullanıcı: ${user_id})`);
       
-      // Toplam ilan sayısını bul
-      const totalJobs = await JobPost.countDocuments({});
+      // Toplam ilan sayısını bul - sadece kullanıcıya ait ilanları say
+      const totalJobs = await JobPost.countDocuments({ posted_by: user_id.toString() });
       
       res.status(StatusCodes.OK).json({
         success: true,
