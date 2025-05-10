@@ -3,14 +3,21 @@ FROM node:18-alpine
 # Çalışma dizini
 WORKDIR /app
 
-# Tüm projeyi kopyala
-COPY . .
+# Client ve server klasörlerini kopyala
+COPY client ./client
+COPY server ./server
 
-# Client build
-RUN cd client && npm install && npm run build
+# Client kurulum ve build
+WORKDIR /app/client
+RUN npm install
+RUN npm run build
 
-# Server hazırla
-RUN cd server && npm install
+# Server kurulum
+WORKDIR /app/server
+RUN npm install
+
+# Ana dizine dön
+WORKDIR /app
 
 # Portu belirle ve uygulamayı başlat
 EXPOSE 5555

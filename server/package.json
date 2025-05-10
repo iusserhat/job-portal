@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/server.ts",
+    "start": "TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true npx ts-node src/server.ts",
     "build": "tsc",
-    "dev": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
     "start:prod": "ts-node --transpile-only --skip-project src/server.ts",
     "railway": "ts-node --transpile-only --skip-project src/server.ts"
   },

@@ -11,11 +11,15 @@ const app = new Application();
 
 // Production ortamında client build dosyalarını servis et
 if (process.env.NODE_ENV === 'production') {
+  console.log("📂 Production modunda client dosyalarını servis etme ayarları yapılıyor");
+  
+  // Express uygulamamıza erişim
   app.server.use(express.static(path.join(__dirname, '../../client/dist')));
   
+  // API olmayan tüm istekleri index.html'e yönlendir (React router için)
   app.server.get('*', (req, res) => {
-    // API endpoint'leri dışındaki tüm istekleri client uygulamasına yönlendir
     if (!req.url.startsWith('/api/')) {
+      console.log(`📄 Client rotasına yönlendiriliyor: ${req.url}`);
       res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
     }
   });
