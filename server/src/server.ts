@@ -36,6 +36,26 @@ if (process.env.NODE_ENV === 'production' && process.env.API_ONLY !== 'true') {
   }
 }
 
+// Root endpoint'i sağlık kontrolü için ekleyelim
+app.server.get('/', (req, res) => {
+  res.json({ 
+    status: 'live',
+    message: 'Job Portal API is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+// API root endpoint'i sağlık kontrolü için ekleyelim
+app.server.get('/api', (req, res) => {
+  res.json({ 
+    status: 'live',
+    message: 'Job Portal API is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
 app.start();
 
 process.on("uncaughtException", (err: Error) => {

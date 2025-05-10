@@ -52,10 +52,12 @@ const HomePage = () => {
     setError(null);
     
     try {
-      // Yeni API endpoint'i kullan - direct-jobs
+      // API URL'ini logged_api_url değişkenine alıp konsola basalım
       const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/direct-jobs`;
+      const logged_api_url = apiUrl;
       
-      console.log("İş ilanları çekiliyor:", apiUrl);
+      console.log("İş ilanları çekiliyor:", logged_api_url);
+      console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
       
       try {
         // CORS ve diğer sorunlar için headers ekle

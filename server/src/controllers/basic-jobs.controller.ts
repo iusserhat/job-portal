@@ -24,6 +24,8 @@ export default class BasicJobsController {
         return res.status(200).end();
       }
       
+      console.log("BasicJobsController - getJobs - istek alındı:", req.url);
+      
       // Sayfalama için querystring'den parametreleri al, ama opsiyonel
       const { page = 1, limit = 50 } = req.query;
       
@@ -38,52 +40,35 @@ export default class BasicJobsController {
       // Doğrudan MongoDB koleksiyonundan çekiyoruz, Mongoose model katmanını bypass ediyoruz
       const jobsCollection = db.collection('job_post');
       
-      // Test için sorgu ekliyoruz
       console.log("BasicJobsController - ilanlar getiriliyor");
       
       try {
-        // Basit sayfalama
-        const jobs = await jobsCollection.find()
+        // Doğrudan find() ile tüm kayıtları al (sınırlı sayıda)
+        const jobs = await jobsCollection.find({})
           .sort({ created_date: -1 })
           .skip(skip)
           .limit(limitNum)
           .toArray();
         
-        const totalJobs = await jobsCollection.countDocuments();
-        
         console.log(`BasicJobsController - ${jobs.length} ilan bulundu`);
         
-        // İstemciye yanıtı gönder
         return res.status(StatusCodes.OK).json({
           success: true,
-          data: jobs,
-          pagination: {
-            total: totalJobs,
-            page: pageNum,
-            limit: limitNum,
-            pages: Math.ceil(totalJobs / limitNum),
-          },
+          data: jobs
         });
       } catch (dbError) {
         console.error('MongoDB sorgu hatası:', dbError);
         
-        // Eğer veritabanı hatası alırsak boş bir dizi döndürelim
-        return res.status(StatusCodes.OK).json({
-          success: true,
-          data: [],
-          pagination: {
-            total: 0,
-            page: pageNum,
-            limit: limitNum,
-            pages: 0,
-          },
-          message: "Veritabanı sorgusu başarısız"
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          message: "İş ilanları getirilemedi, veritabanı sorgusu başarısız",
+          error: dbError instanceof Error ? dbError.message : String(dbError)
         });
       }
     } catch (error) {
       console.error('İş ilanları getirme hatası:', error);
       
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "İş ilanları getirilemedi",
         error: error instanceof Error ? error.message : String(error)
@@ -106,6 +91,8 @@ export default class BasicJobsController {
         return res.status(200).end();
       }
       
+      console.log("BasicJobsController - getJob - istek alındı:", req.url);
+      
       const { job_id } = req.params;
       
       if (!job_id || !mongoose.Types.ObjectId.isValid(job_id)) {
@@ -115,6 +102,8 @@ export default class BasicJobsController {
         });
       }
       
+      console.log("BasicJobsController - getJob - job_id:", job_id);
+      
       // Doğrudan MongoDB koleksiyonundan çekiyoruz
       const db = mongoose.connection.db;
       const jobsCollection = db.collection('job_post');
@@ -123,6 +112,8 @@ export default class BasicJobsController {
         const job = await jobsCollection.findOne({ 
           _id: new mongoose.Types.ObjectId(job_id) 
         });
+        
+        console.log("BasicJobsController - getJob - sonuç:", job ? "İlan bulundu" : "İlan bulunamadı");
         
         if (!job) {
           return res.status(StatusCodes.NOT_FOUND).json({
@@ -139,7 +130,8 @@ export default class BasicJobsController {
         console.error('MongoDB sorgu hatası:', dbError);
         return res.status(StatusCodes.NOT_FOUND).json({
           success: false,
-          message: "İş ilanı getirilemedi, veritabanı sorgusu başarısız"
+          message: "İş ilanı getirilemedi, veritabanı sorgusu başarısız",
+          error: dbError instanceof Error ? dbError.message : String(dbError)
         });
       }
     } catch (error) {

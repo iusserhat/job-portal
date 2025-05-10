@@ -65,16 +65,38 @@ const JobDetailPage = () => {
       try {
         setLoading(true);
         console.log("JobDetailPage - İlan detayları alınıyor, ID:", id);
+        console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
         
         // API'den iş ilanı detaylarını çek
         const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/basic-jobs/${id}`;
         console.log("API isteği gönderiliyor:", apiUrl);
         
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
         
         if (!response.ok) {
           console.error("API yanıtı alınamadı:", response.status, response.statusText);
-          throw new Error(`İş ilanı detayları alınamadı: ${response.status} ${response.statusText}`);
+          
+          // Hata yanıtını almaya çalışalım
+          let errorDetail = "";
+          try {
+            const errorData = await response.json();
+            errorDetail = errorData.message || errorData.error || "";
+            console.error("API hata detayı:", errorData);
+          } catch (e) {
+            try {
+              errorDetail = await response.text();
+            } catch (e2) {
+              errorDetail = "Detay yok";
+            }
+          }
+          
+          throw new Error(`İş ilanı detayları alınamadı: ${response.status} ${response.statusText} - ${errorDetail}`);
         }
         
         const data = await response.json();

@@ -29,20 +29,19 @@ class Application {
   }
 
   private middlewares() {
-    // CORS ayarları
-    const allowedOrigins = ['http://localhost:5137', 'http://localhost:3000', 'http://127.0.0.1:5137', '*'];
+    // CORS ayarları - Netlify domain'i eklendi
+    const allowedOrigins = [
+      'http://localhost:5137', 
+      'http://localhost:3000', 
+      'http://127.0.0.1:5137',
+      'https://iusserhat-job-portal.netlify.app',
+      'https://job-portal-frontend.netlify.app',
+      'https://job-portal-client.netlify.app',
+      '*'
+    ];
     
     this.server.use(cors({
-      origin: function(origin, callback) {
-        // undefined origin'e izin ver (örn. doğrudan tarayıcı isteği)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.indexOf('*') !== -1) {
-          callback(null, true);
-        } else {
-          callback(null, true); // Geliştirme aşamasında tüm kaynaklara izin ver
-        }
-      },
+      origin: '*', // Tüm kaynaklara izin ver
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],

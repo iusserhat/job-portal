@@ -9,3 +9,7 @@ status = 200
   
 [build.environment]
   NODE_VERSION = "18.18.0"
+  
+# Environment değişkenleri - backend URL'ini ekleyelim
+[context.production.environment]
+  VITE_API_URL = "https://job-portal-backend-7dvf.onrender.com"

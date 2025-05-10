@@ -9,8 +9,8 @@ import StorageService from "./storage.service";
  */
 export default class HttpService {
   private http: AxiosInstance;
-  // Server ENV dosyasından gerçek port: 5555 (/api kısmını kaldırdık, auth.service'de tam path var)
-  private baseURL: string = import.meta.env.VITE_API_URL as string || "http://localhost:5555";
+  // Backend URL'ini doğrudan tanımlayalım, Netlify'da çevresel değişken olarak ayarlanmış olacak
+  private baseURL: string = import.meta.env.VITE_API_URL as string || "https://job-portal-backend-7dvf.onrender.com";
 
   constructor() {
     console.log("API URL kullanılıyor:", this.baseURL);
