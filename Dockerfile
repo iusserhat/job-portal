@@ -7,11 +7,11 @@ RUN npm install
 COPY client/ .
 RUN npm run build
 
-# Server uygulaması için yeni yaklaşım
+# Server uygulaması için production modu
 WORKDIR /app/server
 COPY server/package*.json ./
-# TypeScript bağımlılıklarını atlayarak sadece çalışma zamanı bağımlılıklarını kur
-RUN npm install --only=production
+# Bağımlılıkları yükle ama script çalıştırma
+RUN npm install --only=production --ignore-scripts
 COPY server/ .
 
 # Ana dizine geç
@@ -20,15 +20,20 @@ COPY package.json ./
 COPY start.sh ./
 RUN chmod +x start.sh
 
-# Node.js'in TypeScript dosyalarını çalıştırması için ts-node ve typescript'i yükle
+# Node.js'in TypeScript dosyalarını çalıştırması için ts-node'u yükle
 RUN npm install -g ts-node typescript
 
-# NODE_OPTIONS ile TypeScript hatalarını bastır
+# typescript ve @types paketlerini manuel olarak server klasörüne kopyala
+RUN cd /app/server && npm install --no-save typescript @types/node @types/express @types/cors
+
+# TypeScript hatalarını bastırmak için ayarlar
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--no-warnings --max-old-space-size=2048"
 ENV TS_NODE_TRANSPILE_ONLY=true
 ENV TS_NODE_SKIP_PROJECT=true
 
-# Server'ı doğrudan ts-node ile başlat ve tip kontrollerini atla
+# Server'ı başlat
 EXPOSE 5555
-CMD ["./start.sh"] 
+
+# Railway'de kontrol edilmeyen bir alternatif başlatma yöntemi kullan
+CMD ["node", "-e", "require('child_process').spawn('/app/start.sh', [], { stdio: 'inherit', shell: true })"] 

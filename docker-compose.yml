@@ -13,11 +13,16 @@ services:
     build: ./server
     container_name: job-portal-server
     ports:
-      - "5555:5555"
+      - "${PORT:-5555}:${PORT:-5555}"
     depends_on:
       - mongo
     environment:
-      -  MONGO_URL=mongodb://mongo:27017/job-portal
+      - NODE_ENV=production
+      - PORT=${PORT:-5555}
+      - MONGO_URL=${MONGO_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - TS_NODE_TRANSPILE_ONLY=true
+      - TS_NODE_SKIP_PROJECT=true
     volumes:
       - ./server:/app
       - /app/node_modules

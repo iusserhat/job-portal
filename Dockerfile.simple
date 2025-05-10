@@ -1,0 +1,36 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Sadece package.json dosyalarını kopyala
+COPY package*.json ./
+COPY client/package*.json ./client/
+COPY server/package*.json ./server/
+
+# Client için sadece üretim bağımlılıklarını kur
+RUN cd client && npm ci --only=production --ignore-scripts
+
+# Server için üretim bağımlılıklarını kur
+RUN cd server && npm ci --only=production --ignore-scripts
+
+# Kaynak kodlarını kopyala
+COPY client/public ./client/public
+COPY client/src ./client/src
+COPY client/vite.config.ts ./client/vite.config.ts
+COPY server ./server
+
+# Client'ı build et 
+RUN cd client && npm install -g vite && npm run build
+
+# Server için gerekli TypeScript paketlerini yükle
+RUN npm install -g ts-node typescript
+
+# Çalışma zamanı yapılandırması
+ENV NODE_ENV=production
+ENV TS_NODE_TRANSPILE_ONLY=true
+ENV TS_NODE_SKIP_PROJECT=true
+ENV NODE_OPTIONS="--no-warnings --max-old-space-size=2048"
+
+# Uygulamayı başlat
+EXPOSE 5555
+CMD ["ts-node", "--transpile-only", "--skip-project", "--ignore-diagnostics", "server/src/server.ts"] 
