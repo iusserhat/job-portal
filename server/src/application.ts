@@ -17,11 +17,13 @@ class Application {
     this.server = express();
 
     this.environment();
-    this.database();
     this.middlewares();
+    this.setupHealthChecks();
+    this.database();
     this.passport();
     this.routes();
     this.initDirectories();
+    this.serveClientFiles();
   }
 
   private environment() {
@@ -64,25 +66,56 @@ class Application {
     });
   }
 
+  private setupHealthChecks() {
+    // Health check endpoint'i - Backend'in sağlık durumunu kontrol eder
+    this.server.get('/api/v1/health', (req, res) => {
+      return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    });
+    
+    // Root endpoint'i için health check
+    this.server.get('/', (req, res) => {
+      return res.status(200).json({ status: 'ok', message: 'API is running', timestamp: new Date().toISOString() });
+    });
+    
+    // Render özel health check endpoint'i
+    this.server.get('/health', (req, res) => {
+      return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    });
+  }
+
+  private serveClientFiles() {
+    if (process.env.NODE_ENV === 'production' && process.env.API_ONLY !== 'true') {
+      console.log("📂 Production modunda client dosyalarını servis etme ayarları yapılıyor");
+  
+      try {
+        const clientDistPath = path.join(__dirname, '../../client/dist');
+    
+        // Client dist klasörünün varlığını kontrol et
+        if (fs.existsSync(clientDistPath)) {
+          // Express uygulamamıza erişim
+          this.server.use(express.static(clientDistPath));
+      
+          // API olmayan tüm istekleri index.html'e yönlendir (React router için)
+          this.server.get('*', (req, res, next) => {
+            if (!req.url.startsWith('/api/') && !req.url.startsWith('/health')) {
+              console.log(`📄 Client rotasına yönlendiriliyor: ${req.url}`);
+              res.sendFile(path.join(clientDistPath, 'index.html'));
+            } else {
+              next(); // API isteklerini bir sonraki middleware'e ilet
+            }
+          });
+        } else {
+          console.log("⚠️ Client dist klasörü bulunamadı, sadece API modunda çalışılıyor");
+        }
+      } catch (error) {
+        console.log("⚠️ Client dosyalarını servis ederken hata oluştu:", error);
+      }
+    }
+  }
+
   private routes() {
     // Ana rota işleyicisini ekle
     new Routes(this.server);
-    
-    // Health check endpoint'i ekle - CORS başlıklarını ekleyelim ve tam URL yolu kullanarak
-    this.server.get('/api/v1/health', (req, res) => {
-      // CORS başlıklarını ekle
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-      
-      // OPTIONS isteği gelirse hemen yanıt ver
-      if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-      }
-      
-      console.log("Health check isteği alındı");
-      res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-    });
     
     // En son hata middleware'ini ekle
     this.server.use(errorMiddleware);
