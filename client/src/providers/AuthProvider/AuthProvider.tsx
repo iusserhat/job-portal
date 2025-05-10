@@ -10,7 +10,7 @@ type AuthContextProps = {
   logout: () => void;
   isEmployer: () => boolean;
   isJobSeeker: () => boolean;
-  setUserType: (type: string) => void;
+  isUserAllowed: (requestedRole: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -22,21 +22,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (token: string, user: IUserAccount) => {
     console.log("AuthProvider - Login: Kullanıcı giriş yapıyor", user);
     
-    // Kullanıcı tipini doğru şekilde ayarla
+    // Kullanıcı tipi kontrolü
+    if (!user.user_type_id) {
+      console.error("AuthProvider - Login: Kullanıcının tipi (user_type_id) belirtilmemiş");
+      return;
+    }
+    
+    // Kullanıcı tipini doğru formatta olduğundan emin olalım
+    const userTypeId = String(user.user_type_id).trim();
+    
+    // Kullanıcı tipini değiştirmeyelim, API'den gelen değeri kullanmalıyız
     const modifiedUser = {
       ...user,
-      // Eğer tip belirtilmemişse varsayılan olarak iş arayan yapalım
-      user_type_id: user.user_type_id || "jobseeker"
+      user_type_id: userTypeId
     };
     
-    // Kullanıcı tipinin hem doğru olduğundan hem de string olduğundan emin olalım
-    modifiedUser.user_type_id = String(modifiedUser.user_type_id).trim();
-    
     console.log("AuthProvider - Login: Kullanıcı tipi:", modifiedUser.user_type_id);
-    
-    // Test için kullanıcı tipini zorlamayı kaldırdık - kullanıcı gerçek tipini koruyacak
-    // modifiedUser.user_type_id = "employer";
-    // console.log("AuthProvider - Login: Kullanıcı tipi zorla güncellendi:", modifiedUser.user_type_id);
     
     StorageService.setItem("access_token", token);
     // Kullanıcı verilerini local storage'a da yaz
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     const userTypeId = String(user.user_type_id).toLowerCase().trim();
-    const result = userTypeId === "employer";
+    const result = userTypeId === "hr_recruiter";
     console.log(`AuthProvider - isEmployer: user_type_id = ${userTypeId}, sonuç = ${result}`);
     
     return result;
@@ -88,30 +89,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     const userTypeId = String(user.user_type_id).toLowerCase().trim();
-    const result = userTypeId === "jobseeker";
+    const result = userTypeId === "job_seeker";
     console.log(`AuthProvider - isJobSeeker: user_type_id = ${userTypeId}, sonuç = ${result}`);
     
     return result;
   };
   
-  // Kullanıcı tipini değiştir
-  const setUserType = (type: string) => {
-    if (!user) return;
+  // Kullanıcının belirtilen rolde olup olmadığını kontrol et
+  const isUserAllowed = (requestedRole: string) => {
+    if (!user || !user.user_type_id) {
+      console.log("AuthProvider - isUserAllowed: Kullanıcı veya rol bilgisi bulunamadı.");
+      return false;
+    }
     
-    const updatedUser = {
-      ...user,
-      user_type_id: type
-    };
+    // requestedRole'ü doğru formata dönüştür (hr_recruiter/job_seeker)
+    let normalizedRequestedRole = requestedRole.toLowerCase().trim();
+    if (normalizedRequestedRole === "employer") {
+      normalizedRequestedRole = "hr_recruiter";
+    } else if (normalizedRequestedRole === "jobseeker") {
+      normalizedRequestedRole = "job_seeker";
+    }
     
-    setUser(updatedUser);
+    const userRole = String(user.user_type_id).toLowerCase().trim();
     
-    // LocalStorage'ı da güncelle
-    StorageService.setItem("user_data", JSON.stringify(updatedUser));
-    console.log("AuthProvider - setUserType: Kullanıcı tipi değiştirildi:", type);
+    const isAllowed = userRole === normalizedRequestedRole;
+    
+    console.log(`AuthProvider - isUserAllowed: Kullanıcı rolü: ${userRole}, İstenen rol: ${normalizedRequestedRole}, Sonuç: ${isAllowed}`);
+    
+    if (!isAllowed) {
+      console.error("AuthProvider - isUserAllowed: Kullanıcı bu role sahip değil, oturum sonlandırılıyor.");
+      // Rol uyuşmazlığında oturumu sonlandır
+      setTimeout(() => {
+        logout();
+      }, 500);
+    }
+    
+    return isAllowed;
   };
 
   // Check if user is already authenticated on mount
   useEffect(() => {
+    // Kullanıcı zaten yüklendiyse tekrar yükleme
     if (user) {
       console.log("AuthProvider - useEffect: Kullanıcı zaten var, işlem yapılmıyor");
       return;
@@ -122,42 +140,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("AuthProvider - Kullanıcı bilgileri kontrol ediliyor");
         const token = StorageService.getItem("access_token");
         
-        // Önce localStorage'dan kullanıcı bilgisini kontrol et
-        const storedUserData = StorageService.getItem("user_data");
-        
-        if (storedUserData) {
-          try {
-            const userData = JSON.parse(storedUserData);
-            console.log("AuthProvider - Local storage'dan kullanıcı yüklendi:", userData);
-            console.log("AuthProvider - Kullanıcı tipi:", userData.user_type_id);
-            
-            // Kullanıcı tipini koruyalım (değiştirmeyelim)
-            setUser(userData);
-            setIsAuthenticated(true);
-            return;
-          } catch (parseError) {
-            console.error("LocalStorage user data parse hatası:", parseError);
-          }
+        if (!token) {
+          console.log("AuthProvider - Token bulunamadı, oturum açılmamış");
+          setIsAuthenticated(false);
+          setUser(null);
+          return;
         }
         
-        if (token) {
-          console.log("AuthProvider - Token bulundu, kullanıcı bilgileri alınıyor");
+        // Sadece token varsa API isteği yap
+        try {
           const authService = new AuthService();
           const response = await authService.getCurrentUser();
+          
+          // Kullanıcı verileri içinde user_type_id yoksa oturumu kapat
+          if (!response || !response.user_type_id) {
+            console.error("AuthProvider - Geçersiz kullanıcı verisi, oturum sonlandırılıyor");
+            logout();
+            return;
+          }
+          
           console.log("AuthProvider - Kullanıcı başarıyla alındı:", response);
           console.log("AuthProvider - Kullanıcı tipi:", response.user_type_id);
           
-          // Storage'a kaydet
-          StorageService.setItem("user_data", JSON.stringify(response));
-          
           setUser(response);
           setIsAuthenticated(true);
-        } else {
-          console.log("AuthProvider - Token bulunamadı, oturum açılmamış");
+        } catch (error) {
+          console.error("AuthProvider - Kullanıcı bilgisi alınırken hata:", error);
+          // Hata durumunda oturumu kapat
+          logout();
         }
       } catch (error) {
-        console.error("AuthProvider - Kullanıcı bilgisi alınırken hata:", error);
+        console.error("AuthProvider - Genel hata:", error);
         setIsAuthenticated(false);
+        setUser(null);
       }
     };
 
@@ -174,7 +189,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout, 
       isEmployer, 
       isJobSeeker,
-      setUserType 
+      isUserAllowed
     }}>
       {children}
     </AuthContext.Provider>

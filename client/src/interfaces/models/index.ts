@@ -29,9 +29,8 @@ export interface ILoginResponse {
 
 // Kayıt için gerekli veriler
 export interface IRegisterPayload {
-  name: string;
+  user_type_name: string;
   email: string;
   password: string;
-  password_confirmation: string;
-  user_type_id: string;
+  confirmPassword?: string;
 }

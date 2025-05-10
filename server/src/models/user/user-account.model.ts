@@ -106,9 +106,19 @@ UserAccountSchema.methods.generateJWT = function () {
   const expirationDate = new Date(today);
   expirationDate.setDate(today.getDate() + 60);
 
+  // ID değerlerini string'e çevir
+  const userId = this._id.toString();
+  const userTypeId = this.user_type_id.toString();
+
+  console.log("JWT token oluşturuluyor:", {
+    userId: userId,
+    userTypeId: userTypeId
+  });
+
   const payload = {
-    id: this._id,
+    id: userId,
     email: this.email,
+    userType: userTypeId, // Kullanıcı tipini net olarak belirt
   };
 
   const jwtSecret = process.env.JWT_SECRET || "jwt_secret";

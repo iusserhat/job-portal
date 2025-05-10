@@ -38,31 +38,31 @@ const RegisterForm = () => {
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div
               className={`flex items-center justify-center rounded-md border ${
-                form.values.user_type_name === "employer"
+                form.values.user_type_name === "hr_recruiter"
                   ? "bg-indigo-50 border-indigo-600"
                   : "border-gray-300"
               } px-3 py-3 text-sm font-medium leading-4 hover:bg-gray-50 cursor-pointer`}
-              onClick={() => form.setFieldValue("user_type_name", "employer")}
+              onClick={() => form.setFieldValue("user_type_name", "hr_recruiter")}
             >
-              <span className={form.values.user_type_name === "employer" ? "text-indigo-700" : "text-gray-900"}>
+              <span className={form.values.user_type_name === "hr_recruiter" ? "text-indigo-700" : "text-gray-900"}>
                 İşveren
               </span>
             </div>
             <div
               className={`flex items-center justify-center rounded-md border ${
-                form.values.user_type_name === "jobseeker"
+                form.values.user_type_name === "job_seeker"
                   ? "bg-indigo-50 border-indigo-600"
                   : "border-gray-300"
               } px-3 py-3 text-sm font-medium leading-4 hover:bg-gray-50 cursor-pointer`}
-              onClick={() => form.setFieldValue("user_type_name", "jobseeker")}
+              onClick={() => form.setFieldValue("user_type_name", "job_seeker")}
             >
-              <span className={form.values.user_type_name === "jobseeker" ? "text-indigo-700" : "text-gray-900"}>
+              <span className={form.values.user_type_name === "job_seeker" ? "text-indigo-700" : "text-gray-900"}>
                 İş Arayan
               </span>
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500">
-            {form.values.user_type_name === "employer" 
+            {form.values.user_type_name === "hr_recruiter" 
               ? "İş ilanı yayınlamak ve başvuruları yönetmek için işveren hesabı seçin." 
               : "İş ilanlarına başvurmak ve iş aramak için iş arayan hesabı seçin."}
           </p>

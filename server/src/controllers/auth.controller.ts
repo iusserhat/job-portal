@@ -4,6 +4,7 @@ import UserAccount from "../models/user/user-account.model";
 import UserType from "../models/user/user-type.model";
 import { BadRequestError } from "../errors/BadRequestError";
 import { ApiError } from "../errors/ApiError";
+import mongoose from "mongoose";
 
 /**
  * AuthController
@@ -21,31 +22,133 @@ export default class AuthController {
    */
   public static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
+      const { email, password, user_type_id } = req.body;
+      console.log("Login isteği alındı:", { email, user_type_id });
+      
+      // Kullanıcıyı bul
       const user = await UserAccount.findOne({ email: email });
 
       // If user account is not found, throw an error
       if (!user) {
+        console.log("Kullanıcı bulunamadı:", email);
         throw new ApiError(
           StatusCodes.UNAUTHORIZED,
-          "User account not found",
+          "Kullanıcı bulunamadı. E-posta adresini kontrol ediniz.",
           []
         );
       }
 
       // If user account is found, compare the password
       if (!(user as any).comparePassword(password)) {
+        console.log("Şifre eşleşmiyor:", email);
         throw new ApiError(
           StatusCodes.UNAUTHORIZED,
-          "Invalid email or password",
+          "Geçersiz e-posta veya şifre",
           []
         );
       }
+      
+      console.log("Kullanıcı doğrulandı, şimdi rol kontrolü yapılıyor...");
+      
+      // ROL KONTROLÜ
+      // Kullanıcının veritabanındaki rol ID'sini string'e çevir
+      const userTypeIdStr = user.user_type_id.toString();
+      
+      // Kullanıcının veritabanındaki rolünü bul (display name için)
+      const actualUserType = await UserType.findById(userTypeIdStr);
+      console.log("Kullanıcının DB'deki rolü:", {
+        roleId: userTypeIdStr,
+        roleName: actualUserType?.user_type_name,
+        roleDisplayName: actualUserType?.user_type_display_name
+      });
+      
+      // İstemciden gelen rol ID varsa
+      if (user_type_id) {
+        console.log("İstemci tarafından rol belirtildi:", user_type_id);
+        
+        try {
+          // İstemciden gelen rol id ya ObjectId ya da rol adı olabilir
+          let requestedRoleId;
+          
+          // Öncelikle veritabanından rol adı ile eşleşen bir kayıt ara
+          const requestedUserType = await UserType.findOne({ 
+            user_type_name: user_type_id 
+          });
+          
+          // Eğer rol adıyla eşleşen bir kayıt bulunduysa onun ID'sini kullan
+          if (requestedUserType) {
+            requestedRoleId = requestedUserType._id.toString();
+            console.log("Rol adına göre bulunan rol ID:", requestedRoleId);
+          } 
+          // Eğer doğrudan bir ObjectId gönderildiyse onu kullan
+          else if (mongoose.isValidObjectId(user_type_id)) {
+            requestedRoleId = new mongoose.Types.ObjectId(user_type_id).toString();
+            console.log("ObjectId formatında rol ID kullanılıyor:", requestedRoleId);
+          }
+          // Hiçbir şekilde geçerli bir rol bulunamadı
+          else {
+            console.log("Geçersiz rol formatı:", user_type_id);
+            throw new ApiError(
+              StatusCodes.UNAUTHORIZED,
+              "Geçersiz kullanıcı tipi formatı",
+              []
+            );
+          }
+          
+          // Kullanıcının rolü ile istenen rol aynı mı?
+          console.log("Rol karşılaştırması:", {
+            kullanıcıRolü: userTypeIdStr,
+            istenenRol: requestedRoleId,
+            eşleşiyorMu: userTypeIdStr === requestedRoleId
+          });
+          
+          // Roller eşleşmiyorsa hata döndür
+          if (userTypeIdStr !== requestedRoleId) {
+            const requestedUserTypeObj = await UserType.findById(requestedRoleId);
+            
+            console.log("Rol uyuşmazlığı!", {
+              kullanıcıRolAdı: actualUserType?.user_type_name,
+              istenenRolAdı: requestedUserTypeObj?.user_type_name
+            });
+            
+            throw new ApiError(
+              StatusCodes.UNAUTHORIZED,
+              `Bu hesap '${requestedUserTypeObj?.user_type_display_name || ''}' rolü ile giriş yapamaz. Hesabınız '${actualUserType?.user_type_display_name || ''}' olarak kayıtlıdır.`,
+              []
+            );
+          }
+          
+          console.log("Rol kontrolü başarılı: Kullanıcı doğru rolüyle giriş yapıyor");
+        } catch (error) {
+          console.error("Rol kontrolünde hata:", error);
+          throw new ApiError(
+            StatusCodes.UNAUTHORIZED,
+            "Kullanıcı tipi doğrulamasında hata oluştu",
+            []
+          );
+        }
+      } else {
+        console.log("İstemci tarafından rol belirtilmedi, rol kontrolü atlanıyor");
+      }
+
+      // Kimlik doğrulama başarılı - token oluştur
+      const token = (user as any).generateJWT();
+      const userData = {
+        _id: user._id,
+        email: user.email,
+        user_type_id: user.user_type_id.toString(),
+      };
+      
+      console.log("Login başarılı, token oluşturuldu:", { 
+        userId: userData._id, 
+        userEmail: userData.email,
+        userType: userData.user_type_id
+      });
 
       // Send a response with the user account details
       res.status(StatusCodes.OK).json({
-        user: user,
-        token: (user as any).generateJWT(),
+        user: userData,
+        token: token,
       });
     } catch (error) {
       throw error;
@@ -63,6 +166,8 @@ export default class AuthController {
       const payload = req.body;
       const { user_type_name } = payload;
 
+      console.log("Kayıt isteği:", payload);
+
       // Find the user type where name [job_seeker, hr_recruiter]
       const userType = await UserType.findOne({
         user_type_name: user_type_name,
@@ -70,6 +175,7 @@ export default class AuthController {
 
       // If user type is not found, throw an error
       if (!userType) {
+        console.error(`Geçersiz kullanıcı tipi: ${user_type_name}`);
         throw new BadRequestError(
           `User type not found with user_type_name provided`,
           []
@@ -83,6 +189,7 @@ export default class AuthController {
 
       // If user account exists, throw an error
       if (existingUser) {
+        console.log(`Kullanıcı zaten mevcut: ${payload.email}`);
         throw new BadRequestError("User account already exists", []);
       }
 
@@ -95,6 +202,11 @@ export default class AuthController {
 
       // Save the user account
       await userAccount.save();
+      console.log("Yeni kullanıcı kaydedildi:", {
+        email: userAccount.email,
+        user_type_id: userAccount.user_type_id,
+        userTypeName: user_type_name
+      });
 
       // Send a response with the user account details
       res.status(StatusCodes.CREATED).json({
@@ -102,6 +214,7 @@ export default class AuthController {
         user: userAccount,
       });
     } catch (error) {
+      console.error("Kayıt hatası:", error);
       throw error;
     }
   }

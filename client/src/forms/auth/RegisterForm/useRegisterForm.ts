@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import * as Yup from "yup";
 
 const FORM_INITIAL_VALUES = {
-  user_type_name: "jobseeker",
+  user_type_name: "job_seeker",
   email: "",
   password: "",
   confirmPassword: "",
@@ -32,7 +32,7 @@ const useRegisterForm = () => {
   const validationSchema = Yup.object({
     user_type_name: Yup.string()
       .required("Hesap türü seçimi zorunludur")
-      .oneOf(["employer", "jobseeker"], "Geçerli bir hesap türü seçmelisiniz"),
+      .oneOf(["job_seeker", "hr_recruiter"], "Geçerli bir hesap türü seçmelisiniz"),
     email: Yup.string()
       .required("E-posta adresi zorunludur")
       .email("Geçerli bir e-posta adresi giriniz"),
@@ -61,10 +61,14 @@ const useRegisterForm = () => {
           email: values.email,
           password: values.password,
         };
+        
+        console.log("Form değerleri:", values);
+        console.log("Server'a gönderilen payload:", payload);
+        
         await register(payload);
         form.resetForm();
       } catch (error) {
-        console.error(error);
+        console.error("Kayıt işlemi hatası:", error);
       } finally {
         setSubmitting(false);
       }

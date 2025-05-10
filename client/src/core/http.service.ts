@@ -9,14 +9,20 @@ import StorageService from "./storage.service";
  */
 export default class HttpService {
   private http: AxiosInstance;
-  private baseURL: string = import.meta.env.VITE_API_URL as string;
+  // Server ENV dosyasından gerçek port: 5555 (/api kısmını kaldırdık, auth.service'de tam path var)
+  private baseURL: string = import.meta.env.VITE_API_URL as string || "http://localhost:5555";
 
   constructor() {
+    console.log("API URL kullanılıyor:", this.baseURL);
+    
     this.http = axios.create({
       baseURL: this.baseURL,
       withCredentials: false,
       headers: this.setupHeaders(),
     });
+
+    // Response ve request interceptors ekle
+    this.injectRequestInterceptor();
   }
 
   // Get authorization token from cookies
@@ -33,20 +39,75 @@ export default class HttpService {
     // Gerçek HTTP istekleri için Axios kullan
     return {
       get: <T>(url: string, config: any = {}) => {
-        console.log(`Gerçek GET isteği: ${this.baseURL}/${url}`, config);
-        return this.http.get<T>(`${url}`, config).then(response => response.data);
+        // URL'nin başında / varsa kaldır
+        const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+        console.log(`Gerçek GET isteği: ${this.baseURL}/${cleanUrl}`, config);
+        return this.http.get<T>(cleanUrl, config)
+          .then(response => {
+            console.log(`GET ${cleanUrl} yanıtı:`, response.status, response.statusText);
+            return response.data;
+          })
+          .catch(error => {
+            console.error(`GET ${cleanUrl} hatası:`, error.response || error.message);
+            throw error;
+          });
       },
       post: <T, U>(url: string, data: U, config: any = {}) => {
-        console.log(`Gerçek POST isteği: ${this.baseURL}/${url}`, data);
-        return this.http.post<T>(`${url}`, data, config).then(response => response.data);
+        // URL'nin başında / varsa kaldır
+        const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+        console.log(`Gerçek POST isteği: ${this.baseURL}/${cleanUrl}`, data);
+        
+        // Bu endpointe özel debug kontrolü
+        if (url.includes("auth/login") || url.includes("api/v1/auth/login")) {
+          console.log("AUTH LOGIN İSTEĞİ:", {
+            url: `${this.baseURL}/${cleanUrl}`,
+            data: data,
+            headers: this.setupHeaders()
+          });
+        }
+        
+        return this.http.post<T>(cleanUrl, data, config)
+          .then(response => {
+            console.log(`POST ${cleanUrl} yanıtı:`, response.status, response.statusText);
+            return response.data;
+          })
+          .catch(error => {
+            console.error(`POST ${cleanUrl} hatası:`, {
+              status: error.response?.status,
+              statusText: error.response?.statusText,
+              data: error.response?.data,
+              message: error.message
+            });
+            throw error;
+          });
       },
       put: <T, U>(url: string, data: U, config: any = {}) => {
-        console.log(`Gerçek PUT isteği: ${this.baseURL}/${url}`, data);
-        return this.http.put<T>(`${url}`, data, config).then(response => response.data);
+        // URL'nin başında / varsa kaldır
+        const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+        console.log(`Gerçek PUT isteği: ${this.baseURL}/${cleanUrl}`, data);
+        return this.http.put<T>(cleanUrl, data, config)
+          .then(response => {
+            console.log(`PUT ${cleanUrl} yanıtı:`, response.status, response.statusText);
+            return response.data;
+          })
+          .catch(error => {
+            console.error(`PUT ${cleanUrl} hatası:`, error.response || error.message);
+            throw error;
+          });
       },
       delete: <T>(url: string, config: any = {}) => {
-        console.log(`Gerçek DELETE isteği: ${this.baseURL}/${url}`, config);
-        return this.http.delete<T>(`${url}`, config).then(response => response.data);
+        // URL'nin başında / varsa kaldır
+        const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+        console.log(`Gerçek DELETE isteği: ${this.baseURL}/${cleanUrl}`, config);
+        return this.http.delete<T>(cleanUrl, config)
+          .then(response => {
+            console.log(`DELETE ${cleanUrl} yanıtı:`, response.status, response.statusText);
+            return response.data;
+          })
+          .catch(error => {
+            console.error(`DELETE ${cleanUrl} hatası:`, error.response || error.message);
+            throw error;
+          });
       }
     };
   }
@@ -142,10 +203,11 @@ export default class HttpService {
     this.http.interceptors.request.use(
       (config) => {
         // Perform an action before sending the request
-        // TODO: implement an NProgress loader
+        console.log("HTTP İstek gönderiliyor:", config.url, config.method, config.data);
         return config;
       },
       (error) => {
+        console.error("HTTP İstek hatası:", error);
         return Promise.reject(error);
       }
     );
@@ -154,10 +216,17 @@ export default class HttpService {
     this.http.interceptors.response.use(
       (response) => {
         // Do something with response data
+        console.log("HTTP Yanıt alındı:", response.status, response.statusText);
         return response;
       },
       (error) => {
         // Implement a global error handler
+        console.error("HTTP Yanıt hatası:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
         return Promise.reject(error);
       }
     );
@@ -166,6 +235,7 @@ export default class HttpService {
   // Normalize errors
   private normalizeError(error: any) {
     // Implement a global error handler
+    console.error("HTTP Hata normalize ediliyor:", error);
     return Promise.reject(error);
   }
 }
