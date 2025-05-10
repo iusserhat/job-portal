@@ -163,10 +163,19 @@ export default class AuthController {
    */
   public static async signup(req: Request, res: Response, next: NextFunction) {
     try {
+      // CORS header'ları ekleyelim
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      
+      if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+      }
+      
+      console.log("Signup isteği alındı:", req.body);
+      
       const payload = req.body;
       const { user_type_name } = payload;
-
-      console.log("Kayıt isteği:", payload);
 
       // Find the user type where name [job_seeker, hr_recruiter]
       const userType = await UserType.findOne({

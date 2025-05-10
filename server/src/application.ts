@@ -9,6 +9,7 @@ import Seeders from "./seeders";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import passport from "passport";
 import { loadModels } from "./models";
+import { corsMiddleware } from "./middlewares/cors.middleware";
 
 class Application {
   public server;
@@ -43,6 +44,10 @@ class Application {
       '*'
     ];
     
+    // Özel CORS middleware'imizi ekleyelim (diğer tüm middleware'lerden önce)
+    this.server.use(corsMiddleware);
+    
+    // Ek olarak cors kütüphanesini de kullanıyoruz
     this.server.use(cors({
       origin: function(origin, callback) {
         // undefined origin'e izin ver (Postman gibi araçlar için)
