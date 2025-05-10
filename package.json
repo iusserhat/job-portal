@@ -8,12 +8,18 @@
     "install:server": "cd server && npm install && cd ..",
     "install:client": "cd client && npm install && cd ..",
     "dev": "concurrently \"cd server && npm start\" \"cd client && npm run dev\"",
-    "build": "cd client && npm run build && cd .. && cd server && npm run build"
+    "build": "cd client && npm run build && cd .. && cd server && npm run build",
+    "start": "cd server && npm run start",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

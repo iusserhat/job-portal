@@ -55,6 +55,11 @@ class Application {
   private routes() {
     new Routes(this.server);
     this.server.use(errorMiddleware);
+
+    // Health check endpoint'i ekle
+    this.server.get('/api/v1/health', (req, res) => {
+      res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    });
   }
 
   private initDirectories() {
