@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "ts-node src/server.ts",
     "start:prod": "ts-node --transpile-only --skip-project src/server.ts",
-    "railway": "node -e \"process.env.TS_NODE_TRANSPILE_ONLY=true; process.env.TS_NODE_SKIP_PROJECT=true; require('ts-node').register({transpileOnly:true, skipProject:true}); require('./src/server.ts');\""
+    "railway": "ts-node --transpile-only --skip-project src/server.ts"
   },
   "keywords": [],
   "author": "",
