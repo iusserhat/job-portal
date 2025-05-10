@@ -32,8 +32,30 @@ const EmployerRoute = ({ element }) => {
   return element;
 };
 
+// İş arayan erişim kontrolü için özel bileşen
+const JobSeekerRoute = ({ element }) => {
+  const { isJobSeeker } = useAuth();
+  
+  // Kullanıcı iş arayan değilse ana sayfaya yönlendir
+  if (!isJobSeeker()) {
+    console.log("İş arayan olmayan kullanıcı iş arayan sayfasına erişmeye çalıştı, yönlendiriliyor");
+    return <Navigate to="/" replace />;
+  }
+  
+  // İş arayan ise sayfayı göster
+  return element;
+};
+
 function App() {
-  const { isAuthenticated, isEmployer } = useAuth();
+  const { isAuthenticated, isEmployer, isJobSeeker, user } = useAuth();
+  
+  // Kullanıcı tipi bilgilerini logla
+  console.log("App - Kullanıcı bilgileri:", {
+    isAuthenticated,
+    userType: user?.user_type_id,
+    isEmployer: isEmployer(),
+    isJobSeeker: isJobSeeker()
+  });
   
   return (
     <BrowserRouter>
@@ -48,8 +70,8 @@ function App() {
             <Route path="/job-applications/:jobId" element={<EmployerRoute element={<JobApplicationsPage />} />} />
             
             {/* İş arayan sayfaları */}
-            {!isEmployer() && <Route path="/saved-jobs" element={<SavedJobsPage />} />}
-            {!isEmployer() && <Route path="/my-applications" element={<MyApplicationsPage />} />}
+            <Route path="/saved-jobs" element={<JobSeekerRoute element={<SavedJobsPage />} />} />
+            <Route path="/my-applications" element={<JobSeekerRoute element={<MyApplicationsPage />} />} />
             
             {/* Ortak sayfalar */}
             <Route path="/messages" element={<MessagesPage />} />

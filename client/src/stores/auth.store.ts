@@ -29,15 +29,33 @@ const useAuthStore = create<IStores.IAuthStore>((set) => ({
   // This function is used to call the login endpoint
   login: async (payload, options) => {
     set({ isLogging: true });
+    set({ loginError: "" });
+    
     try {
+      console.log("auth.store - login başlatılıyor, payload:", payload);
+      
       const authService = new AuthService();
       const response = await authService.login(payload, options);
+      
+      console.log("auth.store - login başarılı:", response);
       set({ isLogging: false });
+      
       return response;
     } catch (error: any) {
-      console.error(error);
+      console.error("auth.store - login hatası:", error);
       set({ isLogging: false });
-      set({ loginError: error.response.data.message });
+      
+      let errorMessage = "Giriş yapılırken bir hata oluştu";
+      
+      if (error.response && error.response.data) {
+        errorMessage = error.response.data.message || errorMessage;
+        console.error("auth.store - sunucu hata mesajı:", errorMessage);
+      } else if (error.message) {
+        errorMessage = error.message;
+        console.error("auth.store - hata mesajı:", errorMessage);
+      }
+      
+      set({ loginError: errorMessage });
       throw error;
     }
   },

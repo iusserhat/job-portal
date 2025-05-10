@@ -1,85 +1,84 @@
-import { Fragment, useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  BellIcon,
   Bars3Icon,
-  XMarkIcon,
-  HomeIcon,
-  BriefcaseIcon,
-  ChatBubbleLeftRightIcon,
-  UserIcon,
-  Cog8ToothIcon,
-  ArrowLeftStartOnRectangleIcon,
-  BookmarkIcon,
   DocumentDuplicateIcon,
+  HomeIcon,
+  XMarkIcon,
+  ChatBubbleLeftRightIcon,
+  BookmarkIcon,
+  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
-import { Dialog, Menu, Transition } from "@headlessui/react";
-import { useAuth } from "@/providers";
 import { Link } from "react-router-dom";
-import Logo from "@/components/core-ui/Logo";
+import Logo from "./Logo";
+import { useAuth } from "@/providers";
+import { Dialog } from "@headlessui/react";
+import ProfileAvatar from "./ProfileAvatar";
+import DebugInfo from "@/components/debug/DebugInfo";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isAuthenticated, logout, user, isEmployer, isJobSeeker } = useAuth();
+  const [forceUpdate, setForceUpdate] = useState(0);
 
-  // Component yüklendiğinde ve user değiştiğinde kontrol yapalım
-  useEffect(() => {
-    console.log("Header - useEffect:", {
-      user: user,
-      isAuthenticated: isAuthenticated,
-      isEmployer: isEmployer(),
-      isJobSeeker: isJobSeeker(),
-      userType: user?.user_type_id
-    });
-  }, [user, isAuthenticated, isEmployer, isJobSeeker]);
+  // İşveren için menü öğeleri
+  const employerLinks = [
+    { name: "Ana Sayfa", href: "/", icon: HomeIcon },
+    { name: "İlanlarım", href: "/my-jobs", icon: BriefcaseIcon },
+    { name: "İlan Ekle", href: "/post-job", icon: DocumentDuplicateIcon },
+    { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
+  ];
 
-  // Kullanıcı rolüne göre menü öğelerini belirleme
-  const getNavLinks = () => {
-    if (!isAuthenticated || !user) {
-      console.log("Header - getNavLinks: Kullanıcı kimliği doğrulanmadı veya kullanıcı bulunamadı");
-      return [];
-    }
+  // İş arayan için menü öğeleri
+  const jobSeekerLinks = [
+    { name: "Ana Sayfa", href: "/", icon: HomeIcon },
+    { name: "Başvurularım", href: "/my-applications", icon: DocumentDuplicateIcon },
+    { name: "Kaydedilen İlanlar", href: "/saved-jobs", icon: BookmarkIcon },
+    { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
+  ];
 
-    const commonLinks = [
-      { name: "Ana Sayfa", href: "/", icon: HomeIcon },
-    ];
-
-    // İşveren kontrolü için hem fonksiyon hem de doğrudan alan kontrolü yapalım
-    const isEmployerUser = isEmployer();
-    const userTypeId = user.user_type_id?.toLowerCase?.() || "";
-    
-    console.log("Header - getNavLinks: Menü öğeleri belirleniyor:", {
-      isEmployerFunction: isEmployerUser,
-      userTypeIdDirect: userTypeId,
-      user: user
-    });
-
-    // İşveren için menü öğeleri
-    if (isEmployerUser || userTypeId === 'employer') {
-      const employerLinks = [
-        ...commonLinks,
-        { name: "İlanlarım", href: "/my-jobs", icon: BriefcaseIcon },
-        { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
-      ];
-      console.log("Header - getNavLinks: İşveren menüsü döndürülüyor:", employerLinks);
-      return employerLinks;
-    }
-    
-    // İş arayan için menü öğeleri
-    const jobseekerLinks = [
-      ...commonLinks,
-      { name: "Başvurularım", href: "/my-applications", icon: DocumentDuplicateIcon },
-      { name: "Kaydedilen İlanlar", href: "/saved-jobs", icon: BookmarkIcon },
-      { name: "Mesajlar", href: "/messages", icon: ChatBubbleLeftRightIcon },
-    ];
-    console.log("Header - getNavLinks: İş arayan menüsü döndürülüyor:", jobseekerLinks);
-    return jobseekerLinks;
-  };
-
-  // Kullanıcı rolüne göre menü öğelerini al
-  const navigation = getNavLinks();
-
+  // Kullanıcı tipine göre doğru menüyü seç
+  const isEmployerValue = isEmployer();
+  const isJobSeekerValue = isJobSeeker();
+  const storedUserRole = localStorage.getItem("user_role");
+  
+  console.log("Header - Menu seçimi:", {
+    kullanıcıTipi: user?.user_type_id,
+    isEmployer: isEmployerValue,
+    isJobSeeker: isJobSeekerValue,
+    storedUserRole,
+    seçilenMenü: isEmployerValue ? "İşveren menüsü" : isJobSeekerValue ? "İş arayan menüsü" : "Belirsiz menü"
+  });
+  
+  // Kullanıcı tipi kontrolüne göre menüyü belirle
+  // Öncelik sırasına göre kontrol ediyoruz
+  let navigation = [];
+  
+  // StorageService'den okunan rol daha güvenilir, önce onu kontrol edelim
+  if (storedUserRole === "employer") {
+    navigation = employerLinks;
+    console.log("Header - localStorage'dan işveren rolü tespit edildi, işveren menüsü gösteriliyor");
+  } else if (storedUserRole === "jobseeker") {
+    navigation = jobSeekerLinks;
+    console.log("Header - localStorage'dan iş arayan rolü tespit edildi, iş arayan menüsü gösteriliyor");
+  }
+  // localStorage'da rol yoksa veya unknown ise, isEmployer/isJobSeeker fonksiyonlarını kullan
+  else if (isEmployerValue) {
+    navigation = employerLinks;
+    console.log("Header - isEmployer() fonksiyonu ile işveren tespit edildi");
+  } else if (isJobSeekerValue) {
+    navigation = jobSeekerLinks;
+    console.log("Header - isJobSeeker() fonksiyonu ile iş arayan tespit edildi");
+  } else {
+    // Varsayılan olarak iş arayan menüsü göster
+    navigation = jobSeekerLinks;
+    console.log("Header - Rol tespit edilemedi, varsayılan iş arayan menüsü gösteriliyor");
+  }
+  
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white sticky top-0 z-10">
+      {/* Debug bilgilerini göster */}
+      <DebugInfo user={user} isEmployer={isEmployer()} />
+      
       <nav
         className="mx-auto flex items-center justify-between p-6 lg:px-8"
         aria-label="Global"
@@ -113,137 +112,33 @@ const Header = () => {
             </Link>
           ))}
         </div>
-        {isAuthenticated ? (
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end flex items-center gap-x-8">
-            <button
-              type="button"
-              className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-300"
-            >
-              <span className="sr-only">View notifications</span>
-              <BellIcon className="h-6 w-6" aria-hidden="true" />
-            </button>
-
-            <Menu as="div" className="relative inline-block text-left">
-              <div>
-                <Menu.Button>
-                  <img
-                    className="h-8 w-8 rounded-full bg-gray-800"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                </Menu.Button>
-              </div>
-              <Transition
-                as={Fragment}
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-                  <div className="px-1 py-1 ">
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active
-                              ? "bg-indigo-500 text-white"
-                              : "text-gray-900"
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                        >
-                          {active ? (
-                            <UserIcon className="h-5 w-5 mr-2" />
-                          ) : (
-                            <UserIcon className="h-5 w-5 mr-2 text-gray-400" />
-                          )}
-                          Profilim
-                        </button>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active
-                              ? "bg-indigo-500 text-white"
-                              : "text-gray-900"
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                        >
-                          {active ? (
-                            <Cog8ToothIcon className="h-5 w-5 mr-2" />
-                          ) : (
-                            <Cog8ToothIcon className="h-5 w-5 mr-2 text-gray-400" />
-                          )}
-                          Ayarlar
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </div>
-                  <div className="px-1 py-1">
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          className={`${
-                            active
-                              ? "bg-indigo-500 text-white"
-                              : "text-gray-900"
-                          } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
-                          onClick={logout}
-                        >
-                          {active ? (
-                            <ArrowLeftStartOnRectangleIcon className="h-5 w-5 mr-2" />
-                          ) : (
-                            <ArrowLeftStartOnRectangleIcon className="h-5 w-5 mr-2 text-gray-400" />
-                          )}
-                          Çıkış Yap
-                        </button>
-                      )}
-                    </Menu.Item>
-                  </div>
-                </Menu.Items>
-              </Transition>
-            </Menu>
-            {isEmployer() && (
-              <Link
-                to="/post-job"
-                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                İlan Yayınla
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end flex items-center gap-x-8">
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+          {isAuthenticated ? (
+            <ProfileAvatar logout={logout} />
+          ) : (
             <Link
               to="/login"
               className="text-sm font-semibold leading-6 text-gray-900"
             >
-              Giriş Yap
+              Giriş Yap <span aria-hidden="true">&rarr;</span>
             </Link>
-            <Link
-              to="/register"
-              className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Kayıt Ol
-            </Link>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
+
+      {/* Mobile menu */}
       <Dialog
-        as="div"
         className="lg:hidden"
         open={mobileMenuOpen}
         onClose={setMobileMenuOpen}
       >
-        <div className="fixed inset-0 z-10" />
-        <Dialog.Panel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+        <div className="fixed inset-0 z-50" />
+        <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
           <div className="flex items-center justify-between">
-            <div className="-m-1.5 p-1.5">
-              <span className="sr-only">JobPortal</span>
+            <Link to="/" className="-m-1.5 p-1.5">
+              <span className="sr-only">Job Portal</span>
               <Logo />
-            </div>
+            </Link>
             <button
               type="button"
               className="-m-2.5 rounded-md p-2.5 text-gray-700"
@@ -255,62 +150,55 @@ const Header = () => {
           </div>
           <div className="mt-6 flow-root">
             <div className="-my-6 divide-y divide-gray-500/10">
-              <div className="">
+              <div className="space-y-2 py-6">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 ${
-                      window.location.pathname === item.href
-                        ? "text-indigo-600"
-                        : ""
-                    }`}
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
                 ))}
               </div>
-              <div className="py-6">
-                {!isAuthenticated ? (
-                  <>
-                    <Link
-                      to="/login"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    >
-                      Giriş Yap
-                    </Link>
-                    <Link
-                      to="/register"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    >
-                      Kayıt Ol
-                    </Link>
-                  </>
-                ) :
-                  <>
-                    <Link
-                      to="/profile"
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    >
-                      Profilim
-                    </Link>
-                    {isEmployer() && (
-                      <Link
-                        to="/post-job"
-                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                      >
-                        İlan Yayınla
-                      </Link>
-                    )}
-                    <button
-                      onClick={logout}
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                    >
-                      Çıkış Yap
-                    </button>
-                  </>
-                }
-              </div>
+              {isAuthenticated ? (
+                <div className="py-6">
+                  <Link
+                    to="/profile"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Profilim
+                  </Link>
+                  <button
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 w-full text-left"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      logout();
+                    }}
+                  >
+                    Çıkış
+                  </button>
+                </div>
+              ) : (
+                <div className="py-6">
+                  <Link
+                    to="/login"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Kayıt Ol
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </Dialog.Panel>
