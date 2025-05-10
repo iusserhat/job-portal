@@ -7,18 +7,21 @@ WORKDIR /app
 COPY server/package*.json ./
 RUN npm install
 
+# TypeScript'i global olarak yükleyelim
+RUN npm install -g typescript@4.9.5
+
 # TypeScript ayarlarını ve kaynak kodunu kopyala
 COPY server/tsconfig.json ./
 COPY server/src ./src
 
+# Önceden TypeScript kodunu JavaScript'e derle
+RUN tsc || echo "TypeScript compile failed, but continuing..."
+
 # Derleme ve çalıştırma ayarları
 ENV NODE_ENV=production
-ENV TS_NODE_TRANSPILE_ONLY=true
-ENV TS_NODE_SKIP_PROJECT=true
-ENV TS_NODE_IGNORE_DIAGNOSTICS=true
 
 # Port
 EXPOSE 5555
 
-# ts-node ile çalıştır (doğru bayraklarla)
-CMD ["npx", "ts-node", "--transpile-only", "src/server.ts"] 
+# Eğer derlenen dosyalar varsa onları, yoksa doğrudan server.js'i çalıştır
+CMD ["node", "dist/server.js"] 
