@@ -3,25 +3,13 @@ FROM node:18-alpine
 # Çalışma dizini
 WORKDIR /app
 
-# Önce package.json ve package-lock.json dosyalarını kopyala
-COPY package*.json ./
-COPY client/package*.json ./client/
-COPY server/package*.json ./server/
-
-# Client ve server klasörlerini tamamen kopyala
-COPY client ./client
+# Sadece server klasörünü kopyala
 COPY server ./server
 
-# Client build işlemi
-WORKDIR /app/client
-RUN npm install
-RUN npm run build
-
-# Server kurulum
+# Server kurulumu
 WORKDIR /app/server
 RUN npm install
 
-# Çalıştırma
-WORKDIR /app
+# Portu belirle ve uygulamayı başlat
 EXPOSE 5555
-CMD ["sh", "-c", "cd server && TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true npx ts-node src/server.ts"] 
+CMD ["sh", "-c", "TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true npx ts-node src/server.ts"] 
