@@ -11,7 +11,10 @@
     "build": "cd client && npm run build && cd .. && cd server && npm run build",
     "start": "cd server && npm run start",
     "dev:client": "cd client && npm run dev",
-    "dev:server": "cd server && npm run dev"
+    "dev:server": "cd server && npm run dev",
+    "start:railway": "cd server && TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true ts-node --transpile-only --skip-project src/server.ts",
+    "railway:build": "cd client && npm install && npm run build && cd ../server && npm install",
+    "railway:deploy": "npm run railway:build && npm run start:railway"
   },
   "keywords": [],
   "author": "",

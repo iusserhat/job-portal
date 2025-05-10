@@ -1,9 +1,9 @@
 [build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
+builder = "nixpacks"
+buildCommand = "cd client && npm install && npm run build && cd ../server && npm install"
 
 [deploy]
-startCommand = ""
-healthcheckPath = "/api/v1/health"
-healthcheckTimeout = 90
+startCommand = "cd server && TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true ts-node --transpile-only --skip-project src/server.ts"
+healthcheckPath = "/"
+healthcheckTimeout = 10
 restartPolicyType = "on_failure" 

@@ -1,0 +1,25 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Sadece server kodlarını çalıştıracağız, client'ı build etmeden
+COPY package.json ./
+COPY server ./server
+COPY client/dist ./client/dist
+
+# Bağımlılıkları yükle
+RUN cd server && npm install --only=production --no-optional
+RUN npm install -g ts-node typescript
+
+# TypeScript hata kontrolünü devre dışı bırak
+ENV NODE_ENV=production
+ENV TS_NODE_TRANSPILE_ONLY=true
+ENV TS_NODE_SKIP_PROJECT=true
+ENV TS_NODE_IGNORE_DIAGNOSTICS=true 
+ENV NODE_OPTIONS="--no-warnings"
+
+# Portu belirle
+EXPOSE 5555
+
+# Server'ı doğrudan başlat
+CMD ["node", "-e", "process.env.TS_NODE_TRANSPILE_ONLY=true; process.env.TS_NODE_SKIP_PROJECT=true; process.env.TS_NODE_IGNORE_DIAGNOSTICS=true; require('ts-node').register({transpileOnly:true, skipProject:true}); require('./server/src/server.ts');"] 

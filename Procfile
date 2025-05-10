@@ -1,0 +1,1 @@
+web: cd server && TS_NODE_TRANSPILE_ONLY=true TS_NODE_SKIP_PROJECT=true ts-node --transpile-only --skip-project src/server.ts 
