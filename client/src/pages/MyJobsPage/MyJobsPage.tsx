@@ -336,15 +336,15 @@ const MyJobsPage = () => {
 
   return (
     <PortalLayout title="İlanlarım">
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="sm:flex sm:items-center mb-6">
+      <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="sm:flex sm:items-center mb-4 sm:mb-6">
           <div className="sm:flex-auto">
             <h1 className="text-xl font-semibold text-gray-900">İlanlarım</h1>
-            <p className="mt-2 text-sm text-gray-700">
+            <p className="mt-1 sm:mt-2 text-sm text-gray-700">
               Yayınladığınız tüm iş ilanlarını buradan yönetebilirsiniz.
             </p>
             {error && (
-              <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-md border border-red-200 text-sm">
+              <div className="mt-2 p-2 sm:p-3 bg-red-50 text-red-700 rounded-md border border-red-200 text-xs sm:text-sm">
                 {error}
                 <button 
                   onClick={fetchMyJobs}
@@ -366,14 +366,14 @@ const MyJobsPage = () => {
         </div>
 
         {loading ? (
-          <div className="text-center py-10">
+          <div className="text-center py-8 sm:py-10">
             <div className="spinner"></div>
             <p className="mt-2 text-gray-500">İlanlar yükleniyor...</p>
           </div>
         ) : jobs.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="text-center py-8 sm:py-10 bg-white rounded-lg shadow-sm border border-gray-200">
             <svg 
-              className="mx-auto h-12 w-12 text-gray-400" 
+              className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor" 
@@ -398,8 +398,77 @@ const MyJobsPage = () => {
             </div>
           </div>
         ) : (
-          <div className="mt-8 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-            <table className="min-w-full divide-y divide-gray-300">
+          <div className="mt-2 sm:mt-4 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+            {/* Mobil - Liste görünümü (sadece sm ekran boyutuna kadar) */}
+            <div className="sm:hidden space-y-4">
+              {jobs.map((job) => (
+                <div key={job.id} className={`bg-white p-3 border rounded-lg ${!job.isActive ? "bg-gray-50" : ""}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{job.jobTitle}</h3>
+                      <p className="text-sm text-gray-500">{job.companyName}</p>
+                    </div>
+                    <span
+                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                        job.isActive
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {job.isActive ? "Aktif" : "Pasif"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-3">
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {job.location}
+                    </div>
+                    <div>{job.jobType}</div>
+                    <div>{new Date(job.createdAt).toLocaleDateString('tr-TR')}</div>
+                  </div>
+                  
+                  <div className="flex items-center text-xs mb-3">
+                    <Link 
+                      to={`/job-applications/${job._id || job.id}`} 
+                      className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <span className="relative flex h-3 w-3 mr-1">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                      </span>
+                      {job.applicantsCount || 0} başvuru
+                    </Link>
+                  </div>
+                  
+                  <div className="flex justify-between border-t pt-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleJobStatus(job.id)}
+                      className={`text-xs ${
+                        job.isActive
+                          ? "text-red-600 hover:text-red-900"
+                          : "text-green-600 hover:text-green-900"
+                      }`}
+                    >
+                      {job.isActive ? "Pasif Yap" : "Aktif Yap"}
+                    </button>
+                    <Link
+                      to={`/job/${job.id}`}
+                      className="text-xs text-indigo-600 hover:text-indigo-900"
+                    >
+                      Görüntüle
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Tablet/Desktop - Tablo görünümü (sadece sm'den büyük ekranlar için) */}
+            <table className="hidden sm:table min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
@@ -408,13 +477,13 @@ const MyJobsPage = () => {
                   <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Konum
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                  <th className="hidden md:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Tür
                   </th>
                   <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Başvuru
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                  <th className="hidden md:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Tarih
                   </th>
                   <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -435,7 +504,7 @@ const MyJobsPage = () => {
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       {job.location}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       {job.jobType}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -443,7 +512,6 @@ const MyJobsPage = () => {
                         to={`/job-applications/${job._id || job.id}`} 
                         className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         title="Başvuruları görüntüle"
-                        onClick={() => console.log("Başvuru linkine tıklandı, jobId:", job._id || job.id)}
                       >
                         <span className="relative flex h-3 w-3 mr-1">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -452,7 +520,7 @@ const MyJobsPage = () => {
                         {job.applicantsCount || 0} başvuru
                       </Link>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       {new Date(job.createdAt).toLocaleDateString('tr-TR')}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm">

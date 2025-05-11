@@ -1,7 +1,7 @@
 import usePageTitle from "@/hooks/usePageTitle";
 import { FC } from "react";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "./components/Header/Header";
+import Footer from "./components/Footer/Footer";
 
 type Props = {
   title?: string;
@@ -16,7 +16,7 @@ const PortalLayout: FC<Props> = ({ title, children }) => {
       <Header />
 
       <main className="flex-grow">
-        <div className="mx-auto w-full px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full px-3 py-4 sm:px-4 sm:py-6 md:px-6 lg:px-8">
           {children}
         </div>
       </main>

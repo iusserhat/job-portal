@@ -316,16 +316,16 @@ const JobDetailPage = () => {
 
   return (
     <PortalLayout title={job.jobTitle}>
-      <div className="container mx-auto py-6 sm:py-10 px-4 max-w-5xl">
+      <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 max-w-5xl">
         {/* İş İlanı Header */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-8 border-t-4 border-indigo-600">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-6 md:p-8 border-t-4 border-indigo-600">
           <div className="flex flex-col md:flex-row md:items-center justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{job.jobTitle}</h1>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{job.jobTitle}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-1 sm:gap-2">
                 <span className="text-indigo-600 font-medium">{job.companyName}</span>
                 <span className="text-gray-500 hidden sm:inline">•</span>
-                <div className="flex items-center text-gray-500">
+                <div className="flex items-center text-gray-500 text-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -333,22 +333,21 @@ const JobDetailPage = () => {
                   {job.location}
                 </div>
                 <span className="text-gray-500 hidden sm:inline">•</span>
-                <div className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                <div className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800">
                   {job.jobType}
                 </div>
-                <span className="text-gray-500 hidden sm:inline">•</span>
-                <div className="text-gray-500 text-sm">
-                  İlan Tarihi: {new Date(job.createdAt).toLocaleDateString('tr-TR')}
-                </div>
+              </div>
+              <div className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2">
+                İlan Tarihi: {new Date(job.createdAt).toLocaleDateString('tr-TR')}
               </div>
             </div>
             
-            <div className="mt-4 md:mt-0 flex flex-col">
+            <div className="mt-3 md:mt-0 flex flex-col">
               <div className="text-sm font-medium text-gray-900">
                 Maaş: <span className="text-indigo-600">{job.salary}</span>
               </div>
               <div className="mt-2 flex items-center text-sm">
-                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
                   {job.applicantsCount || 0} başvuru
                 </span>
               </div>
@@ -356,16 +355,16 @@ const JobDetailPage = () => {
           </div>
           
           {/* İş İlanı İçeriği */}
-          <div className="mt-6 sm:mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3 sm:mb-4">İş Açıklaması</h2>
-            <p className="text-gray-700 whitespace-pre-line">
+          <div className="mt-4 sm:mt-6 md:mt-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">İş Açıklaması</h2>
+            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
               {job.description}
             </p>
             
-            <h2 className="text-xl font-semibold text-gray-900 mt-6 sm:mt-8 mb-3 sm:mb-4">Aranan Nitelikler</h2>
-            <div className="flex flex-wrap gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mt-4 sm:mt-6 mb-2 sm:mb-4">Aranan Nitelikler</h2>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {job.requiredSkills && job.requiredSkills.map((skill, index) => (
-                <span key={index} className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
+                <span key={index} className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs sm:text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
                   {skill}
                 </span>
               ))}
@@ -375,12 +374,12 @@ const JobDetailPage = () => {
         
         {/* Başvuru Formu */}
         {isAuthenticated ? (
-          <div className="mt-6 sm:mt-10 bg-white rounded-lg shadow p-4 sm:p-8">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Bu İlana Başvur</h2>
-            <p className="mt-2 text-sm sm:text-base text-gray-600">Bilgilerinizi doldurun ve bu pozisyon için başvurunuzu gönderin.</p>
+          <div className="mt-4 sm:mt-8 bg-white rounded-lg shadow p-3 sm:p-6 md:p-8">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">Bu İlana Başvur</h2>
+            <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-gray-600">Bilgilerinizi doldurun ve bu pozisyon için başvurunuzu gönderin.</p>
             
             {applicationSuccess && (
-              <div className="mt-4 sm:mt-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded" role="alert">
+              <div className="mt-3 sm:mt-5 bg-green-50 border border-green-200 text-green-700 px-3 py-2 sm:px-4 sm:py-3 rounded" role="alert">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -388,17 +387,17 @@ const JobDetailPage = () => {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="font-medium">Başvurunuz başarıyla gönderildi!</p>
-                    <p className="text-sm mt-1">Başvurunuz değerlendirildikten sonra sizinle iletişime geçilecektir. Bu iş ilanı için tekrar başvuramazsınız.</p>
+                    <p className="text-sm font-medium">Başvurunuz başarıyla gönderildi!</p>
+                    <p className="text-xs sm:text-sm mt-1">Başvurunuz değerlendirildikten sonra sizinle iletişime geçilecektir. Bu iş ilanı için tekrar başvuramazsınız.</p>
                   </div>
                 </div>
               </div>
             )}
             
             {hasApplied ? (
-              <div className="mt-6 bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-3 rounded" role="alert">
-                <p className="font-medium">Bu ilana daha önce başvurdunuz!</p>
-                <p className="text-sm">Başvurunuz değerlendirme sürecindedir. Gelişmeler için e-posta adresinizi kontrol ediniz.</p>
+              <div className="mt-4 bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 sm:px-4 sm:py-3 rounded" role="alert">
+                <p className="text-sm font-medium">Bu ilana daha önce başvurdunuz!</p>
+                <p className="text-xs sm:text-sm">Başvurunuz değerlendirme sürecindedir. Gelişmeler için e-posta adresinizi kontrol ediniz.</p>
               </div>
             ) : (
               <Formik
@@ -413,8 +412,8 @@ const JobDetailPage = () => {
                 onSubmit={handleSubmit}
               >
                 {({ values, errors, touched, handleChange, handleBlur, isValid }) => (
-                  <Form className="mt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Form className="mt-4 sm:mt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       {/* İsim Soyisim */}
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -427,13 +426,13 @@ const JobDetailPage = () => {
                           value={values.name}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                          className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                             errors.name && touched.name ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                           }`}
                           placeholder="Adınız Soyadınız"
                         />
                         {errors.name && touched.name && (
-                          <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+                          <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.name}</p>
                         )}
                       </div>
 
@@ -449,13 +448,13 @@ const JobDetailPage = () => {
                           value={values.email}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                          className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                             errors.email && touched.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                           }`}
                           placeholder="ornek@gmail.com"
                         />
                         {errors.email && touched.email && (
-                          <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                          <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.email}</p>
                         )}
                       </div>
                       
@@ -471,13 +470,13 @@ const JobDetailPage = () => {
                           value={values.phone}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                          className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                             errors.phone && touched.phone ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                           }`}
                           placeholder="05XX XXX XX XX"
                         />
                         {errors.phone && touched.phone && (
-                          <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+                          <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.phone}</p>
                         )}
                       </div>
                       
@@ -493,47 +492,47 @@ const JobDetailPage = () => {
                           value={values.resume}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                          className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                             errors.resume && touched.resume ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                           }`}
                           placeholder="LinkedIn profiliniz veya CV linkiniz"
                         />
                         {errors.resume && touched.resume && (
-                          <p className="mt-1 text-sm text-red-500">{errors.resume}</p>
+                          <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.resume}</p>
                         )}
                       </div>
-                      
-                      {/* Başvuru Yazısı */}
-                      <div className="col-span-1 md:col-span-2">
-                        <label htmlFor="coverLetter" className="block text-sm font-medium text-gray-700 mb-1">
-                          Başvuru Yazısı / Ön Yazı *
-                        </label>
-                        <textarea
-                          id="coverLetter"
-                          name="coverLetter"
-                          value={values.coverLetter}
-                          onChange={handleChange}
-                          onBlur={handleBlur}
-                          rows={5}
-                          className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
-                            errors.coverLetter && touched.coverLetter ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
-                          }`}
-                          placeholder="Neden bu pozisyona başvurduğunuzu ve neden sizin seçilmeniz gerektiğini açıklayın..."
-                        />
-                        {errors.coverLetter && touched.coverLetter && (
-                          <p className="mt-1 text-sm text-red-500">{errors.coverLetter}</p>
-                        )}
-                      </div>
+                    
+                    {/* Başvuru Yazısı */}
+                    <div className="col-span-1 sm:col-span-2">
+                      <label htmlFor="coverLetter" className="block text-sm font-medium text-gray-700 mb-1">
+                        Başvuru Yazısı *
+                      </label>
+                      <textarea
+                        id="coverLetter"
+                        name="coverLetter"
+                        value={values.coverLetter}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        rows={4}
+                        className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                          errors.coverLetter && touched.coverLetter ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
+                        }`}
+                        placeholder="Neden bu pozisyon için uygun olduğunuzu düşünüyorsunuz? Deneyimlerinizden ve yeteneklerinizden bahsedin..."
+                      />
+                      {errors.coverLetter && touched.coverLetter && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.coverLetter}</p>
+                      )}
                     </div>
-
-                    {/* Başvur Butonu */}
-                    <div className="mt-8">
+                    
+                    {/* Gönder Butonu */}
+                    <div className="col-span-1 sm:col-span-2 mt-4 sm:mt-6">
                       <button
                         type="submit"
-                        className="w-full md:w-auto bg-indigo-600 text-white py-3 px-6 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        className="w-full bg-indigo-600 text-white py-2 sm:py-3 px-4 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                       >
                         Başvuruyu Gönder
                       </button>
+                    </div>
                     </div>
                   </Form>
                 )}
@@ -541,23 +540,15 @@ const JobDetailPage = () => {
             )}
           </div>
         ) : (
-          <div className="mt-6 sm:mt-10 bg-white rounded-lg shadow p-4 sm:p-8 text-center">
-            <h3 className="text-lg sm:text-xl font-medium text-gray-900">Bu ilana başvurmak için giriş yapmalısınız</h3>
-            <p className="mt-2 text-sm sm:text-base text-gray-600">Hesabınız yoksa hemen ücretsiz kayıt olabilirsiniz.</p>
-            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center gap-4">
-              <button
-                onClick={() => navigate('/login')}
-                className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-              >
-                Giriş Yap
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50"
-              >
-                Kayıt Ol
-              </button>
-            </div>
+          <div className="mt-4 sm:mt-8 bg-white rounded-lg shadow p-4 sm:p-6 text-center">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">İlana Başvurmak İster misiniz?</h2>
+            <p className="mt-2 text-sm text-gray-600">Bu iş ilanına başvurmak için lütfen giriş yapın</p>
+            <button
+              onClick={() => navigate("/login")}
+              className="mt-4 sm:mt-6 inline-flex items-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Giriş Yap
+            </button>
           </div>
         )}
       </div>
