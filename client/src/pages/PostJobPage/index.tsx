@@ -72,9 +72,6 @@ const PostJobPage = () => {
       const token = localStorage.getItem('access_token');
       console.log("Token durumu:", token ? "Token var" : "Token yok");
       
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/v1/jobs`;
-      console.log("API isteği gönderiliyor:", apiUrl);
-      
       // API isteği için verileri hazırla
       const jobData = {
         job_type_id: "507f1f77bcf86cd799439011", // Geçerli bir MongoDB ObjectId
@@ -95,13 +92,26 @@ const PostJobPage = () => {
       
       console.log("Gönderilen veri:", jobData);
       
+      // Doğrudan production URL'ini belirtelim
+      const apiUrl = `https://job-portal-gfus.onrender.com/api/v1/jobs`;
+      
+      // Token kontrolü ve işleme
+      let authToken = token;
+      if (authToken && !authToken.startsWith('Bearer ')) {
+        authToken = `Bearer ${authToken}`;
+      }
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '' // Token yoksa boş gönder
+          'Authorization': authToken || '',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(jobData)
+        body: JSON.stringify(jobData),
+        // CORS sorunu çözmek için ayarlar
+        credentials: 'omit',
+        mode: 'cors'
       });
       
       let responseData;
