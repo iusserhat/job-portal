@@ -200,16 +200,16 @@ const PostJobPage = () => {
 
   return (
     <PortalLayout title="İş İlanı Oluştur">
-      <div className="container mx-auto py-8 px-4 max-w-3xl">
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Yeni İş İlanı Oluştur</h1>
-          <p className="text-gray-600">Bandırma ve çevresindeki yetenekli adayları bulun</p>
+      <div className="container mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-4 max-w-3xl">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Yeni İş İlanı Oluştur</h1>
+          <p className="text-sm sm:text-base text-gray-600">Bandırma ve çevresindeki yetenekli adayları bulun</p>
         </div>
 
         {submitSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6" role="alert">
+          <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 sm:px-4 sm:py-3 rounded mb-4 sm:mb-6 text-sm" role="alert">
             <p className="font-medium">İş ilanınız başarıyla yayınlandı!</p>
-            <p className="text-sm">İlanınız onay sürecinden sonra yayına alınacaktır.</p>
+            <p className="text-xs sm:text-sm">İlanınız onay sürecinden sonra yayına alınacaktır.</p>
           </div>
         )}
 
@@ -230,10 +230,10 @@ const PostJobPage = () => {
           onSubmit={handleSubmit}
         >
           {({ values, errors, touched, handleChange, handleBlur, isValid }) => (
-            <Form className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Form className="bg-white shadow-md rounded-lg p-3 sm:p-4 md:p-6 border border-gray-200">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
                 {/* İş Başlığı */}
-                <div className="col-span-2">
+                <div>
                   <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-1">
                     İş Başlığı *
                   </label>
@@ -244,13 +244,13 @@ const PostJobPage = () => {
                     value={values.jobTitle}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.jobTitle && touched.jobTitle ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
-                    placeholder="Örn: Yazılım Geliştirici, Satış Temsilcisi, Garson"
+                    placeholder="Örn: Yazılım Geliştirici, Satış Temsilcisi"
                   />
                   {errors.jobTitle && touched.jobTitle && (
-                    <p className="mt-1 text-sm text-red-500">{errors.jobTitle}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.jobTitle}</p>
                   )}
                 </div>
 
@@ -266,13 +266,13 @@ const PostJobPage = () => {
                     value={values.companyName}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.companyName && touched.companyName ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
                     placeholder="Şirketinizin adı"
                   />
                   {errors.companyName && touched.companyName && (
-                    <p className="mt-1 text-sm text-red-500">{errors.companyName}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.companyName}</p>
                   )}
                 </div>
 
@@ -287,7 +287,7 @@ const PostJobPage = () => {
                     value={values.location}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.location && touched.location ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
                   >
@@ -299,7 +299,7 @@ const PostJobPage = () => {
                     ))}
                   </select>
                   {errors.location && touched.location && (
-                    <p className="mt-1 text-sm text-red-500">{errors.location}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.location}</p>
                   )}
                 </div>
 
@@ -314,7 +314,7 @@ const PostJobPage = () => {
                     value={values.jobType}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.jobType && touched.jobType ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
                   >
@@ -326,7 +326,7 @@ const PostJobPage = () => {
                     ))}
                   </select>
                   {errors.jobType && touched.jobType && (
-                    <p className="mt-1 text-sm text-red-500">{errors.jobType}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.jobType}</p>
                   )}
                 </div>
 
@@ -342,7 +342,7 @@ const PostJobPage = () => {
                     value={values.salary}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     placeholder="Örn: 10.000₺ - 15.000₺"
                   />
                 </div>
@@ -359,17 +359,17 @@ const PostJobPage = () => {
                     value={values.applicationDeadline}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.applicationDeadline && touched.applicationDeadline ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
                   />
                   {errors.applicationDeadline && touched.applicationDeadline && (
-                    <p className="mt-1 text-sm text-red-500">{errors.applicationDeadline}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.applicationDeadline}</p>
                   )}
                 </div>
 
                 {/* İş Açıklaması */}
-                <div className="col-span-2">
+                <div>
                   <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700 mb-1">
                     İş Açıklaması *
                   </label>
@@ -379,19 +379,19 @@ const PostJobPage = () => {
                     value={values.jobDescription}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    rows={6}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    rows={5}
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.jobDescription && touched.jobDescription ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
-                    placeholder="İş pozisyonu hakkında detaylı bilgi verin. Adayın sorumlulukları ve görevleri neler olacak?"
+                    placeholder="İş pozisyonu hakkında detaylı bilgi verin"
                   />
                   {errors.jobDescription && touched.jobDescription && (
-                    <p className="mt-1 text-sm text-red-500">{errors.jobDescription}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.jobDescription}</p>
                   )}
                 </div>
 
                 {/* Gerekli Beceriler */}
-                <div className="col-span-2">
+                <div>
                   <label htmlFor="requiredSkills" className="block text-sm font-medium text-gray-700 mb-1">
                     Gerekli Yetenekler *
                   </label>
@@ -402,13 +402,13 @@ const PostJobPage = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     rows={3}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.requiredSkills && touched.requiredSkills ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
-                    placeholder="İşe alacağınız adayda hangi becerileri arıyorsunuz? (Virgülle ayırarak yazın)"
+                    placeholder="Virgülle ayırarak yazın (ör: JavaScript, CSS)"
                   />
                   {errors.requiredSkills && touched.requiredSkills && (
-                    <p className="mt-1 text-sm text-red-500">{errors.requiredSkills}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.requiredSkills}</p>
                   )}
                 </div>
 
@@ -424,13 +424,13 @@ const PostJobPage = () => {
                     value={values.contactEmail}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 ${
+                    className={`w-full p-2 sm:p-3 border rounded-md focus:outline-none focus:ring-2 ${
                       errors.contactEmail && touched.contactEmail ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-indigo-200"
                     }`}
                     placeholder="ornek@sirket.com"
                   />
                   {errors.contactEmail && touched.contactEmail && (
-                    <p className="mt-1 text-sm text-red-500">{errors.contactEmail}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-500">{errors.contactEmail}</p>
                   )}
                 </div>
 
@@ -446,18 +446,18 @@ const PostJobPage = () => {
                     value={values.contactPhone}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="w-full p-2 sm:p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     placeholder="05XX XXX XX XX"
                   />
                 </div>
               </div>
 
               {/* Gönder Butonu */}
-              <div className="mt-8">
+              <div className="mt-6 sm:mt-8">
                 <button
                   type="submit"
                   disabled={isSubmitting || !isValid}
-                  className={`w-full bg-indigo-600 text-white py-3 px-4 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                  className={`w-full bg-indigo-600 text-white py-2 sm:py-3 px-4 rounded-md font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
                     (isSubmitting || !isValid) && "opacity-70 cursor-not-allowed"
                   }`}
                 >
