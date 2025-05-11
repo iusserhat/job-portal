@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import PortalLayout from "@/components/layouts/portal/PortalLayout";
 import { toast } from "react-hot-toast";
@@ -25,6 +25,7 @@ const PostJobPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Bandırma'nın mahalleleri
   const bandirmaLocations = [
@@ -69,8 +70,38 @@ const PostJobPage = () => {
     try {
       console.log("Yeni iş ilanı oluşturuluyor:", values);
       
-      const token = localStorage.getItem('access_token');
+      // JWT token için önce URL kontrolü yap
+      const urlParams = new URLSearchParams(location.search);
+      const urlToken = urlParams.get('token');
+      
+      // Token almayı dene
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        // URL'den token varsa onu kullan
+        if (urlToken) {
+          token = urlToken;
+        } else {
+          toast.error("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor. Çerezleri etkinleştirin veya gizli moddan çıkın.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // localStorage'dan token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
+      }
+      
       console.log("Token durumu:", token ? "Token var" : "Token yok");
+      
+      if (!token) {
+        toast.error("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
+        setTimeout(() => navigate('/login'), 1500);
+        return;
+      }
       
       // API isteği için verileri hazırla
       const jobData = {
@@ -100,6 +131,9 @@ const PostJobPage = () => {
       if (authToken && !authToken.startsWith('Bearer ')) {
         authToken = `Bearer ${authToken}`;
       }
+      
+      console.log("API isteği gönderiliyor:", apiUrl);
+      console.log("Authorization header:", authToken ? authToken.substring(0, 20) + "..." : "Yok");
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -141,9 +175,20 @@ const PostJobPage = () => {
       // Form'u sıfırla
       resetForm();
       
-      // 2 saniye sonra ana sayfaya yönlendir
+      // İlanlarım sayfasına yönlendir - URL parametresi ile token taşı
       setTimeout(() => {
-        navigate("/");
+        // URL parametresi ile token varsa onu da yeni URL'e ekle
+        if (urlToken) {
+          const urlUser = urlParams.get('user');
+          const queryParams = new URLSearchParams();
+          queryParams.set('token', urlToken);
+          if (urlUser) {
+            queryParams.set('user', urlUser);
+          }
+          navigate(`/my-jobs?${queryParams.toString()}`);
+        } else {
+          navigate("/my-jobs");
+        }
       }, 2000);
     } catch (error) {
       console.error("İş ilanı oluşturma hatası:", error);
