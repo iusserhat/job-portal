@@ -60,9 +60,25 @@ const useLoginForm = () => {
           const response = await login(loginPayload);
           console.log("Login başarılı:", response);
           
-          // Giriş başarılı, kullanıcıyı anasayfaya yönlendir
-          setLogin(response.token, response.user);
-          navigate("/");
+          // Giriş başarılı olduğunda localStorage'a token kaydetmeyi dene
+          try {
+            // Token ve kullanıcı bilgilerini AuthProvider login fonksiyonu ile saklayalım
+            setLogin(response.token, response.user);
+            
+            // Başarılı giriş sonrası kullanıcıyı ana sayfaya yönlendir
+            navigate("/");
+          } catch (storageError) {
+            // LocalStorage erişim hatası varsa URL parametresi ile çözüm dene
+            console.error("localStorage erişim hatası:", storageError);
+            
+            // URL parametreleriyle token'ı ekrana gönder
+            const token = response.token;
+            const userJson = JSON.stringify(response.user);
+            const encodedUser = encodeURIComponent(userJson);
+            
+            // Kullanıcıyı token ve kullanıcı bilgileriyle birlikte ana sayfaya yönlendir
+            navigate(`/?token=${encodeURIComponent(token)}&user=${encodedUser}`);
+          }
         } catch (error: any) {
           console.error("Login hatası:", error);
           

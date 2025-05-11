@@ -1,103 +1,165 @@
-import { lazy } from "react";
+import { lazy, useEffect } from "react";
 import HomePage from "@/pages/HomePage";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import AppWrapper from "./AppWrapper";
 import { useAuth } from "./providers";
 import JobDetailPage from "./pages/JobDetailPage";
 import JobApplicationsPage from "./pages/JobApplicationsPage";
 import MyApplicationsPage from "./pages/MyApplicationsPage";
+import StorageService from "./core/storage.service";
 
+// Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/AuthPages/LoginPage"));
 const RegisterPage = lazy(() => import("@/pages/AuthPages/RegisterPage"));
-const ForgotPasswordPage = lazy(
-  () => import("@/pages/AuthPages/ForgotPasswordPage")
-);
 const MyJobsPage = lazy(() => import("@/pages/MyJobsPage"));
-const SavedJobsPage = lazy(() => import("@/pages/SavedJobsPage"));
-const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
-const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const PostJobPage = lazy(() => import("@/pages/PostJobPage"));
-
-// İşveren erişim kontrolü için özel bileşen
-const EmployerRoute = ({ element }) => {
-  const { isEmployer } = useAuth();
-  
-  // Kullanıcı işveren değilse ana sayfaya yönlendir
-  if (!isEmployer()) {
-    console.log("İşveren olmayan kullanıcı işveren sayfasına erişmeye çalıştı, yönlendiriliyor");
-    return <Navigate to="/" replace />;
-  }
-  
-  // İşveren ise sayfayı göster
-  return element;
-};
-
-// İş arayan erişim kontrolü için özel bileşen
-const JobSeekerRoute = ({ element }) => {
-  const { isJobSeeker } = useAuth();
-  
-  // Kullanıcı iş arayan değilse ana sayfaya yönlendir
-  if (!isJobSeeker()) {
-    console.log("İş arayan olmayan kullanıcı iş arayan sayfasına erişmeye çalıştı, yönlendiriliyor");
-    return <Navigate to="/" replace />;
-  }
-  
-  // İş arayan ise sayfayı göster
-  return element;
-};
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 
 function App() {
-  const { isAuthenticated, isEmployer, isJobSeeker, user } = useAuth();
+  const { login, isAuthenticated, isEmployer, isJobSeeker, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // URL'den token kontrolü
+  useEffect(() => {
+    const checkURLToken = async () => {
+      try {
+        const params = new URLSearchParams(location.search);
+        const token = params.get("token");
+        const userParam = params.get("user");
+
+        // URL'de token ve user parametreleri varsa
+        if (token && userParam && !isAuthenticated) {
+          console.log("URL'den token bulundu, oturum başlatılıyor...");
+          
+          try {
+            // URL'den gelen kullanıcı verisini parse et
+            const userData = JSON.parse(decodeURIComponent(userParam));
+            
+            // AuthProvider ile giriş yap
+            login(token, userData);
+            
+            // Parametreleri temizle ve yönlendir
+            navigate(location.pathname, { replace: true });
+            
+            console.log("URL token ile oturum başlatıldı, parametreler temizlendi");
+          } catch (parseError) {
+            console.error("URL user parametresi parse edilemedi:", parseError);
+          }
+        }
+      } catch (error) {
+        console.error("URL token kontrolünde hata:", error);
+      }
+    };
+
+    checkURLToken();
+  }, [location, login, navigate, isAuthenticated]);
   
   // Kullanıcı tipi bilgilerini logla
   console.log("App - Kullanıcı bilgileri:", {
     isAuthenticated,
-    userType: user?.user_type_id,
-    isEmployer: isEmployer(),
-    isJobSeeker: isJobSeeker()
+    isEmployer: isAuthenticated ? isEmployer() : null,
+    isJobSeeker: isAuthenticated ? isJobSeeker() : null,
+    userType: user?.user_type_id
   });
-  
+
   return (
-    <BrowserRouter>
-      {isAuthenticated ? (
-        <Routes>
-          <Route path="/" element={<AppWrapper />}>
-            <Route index element={<HomePage />} />
-            
-            {/* İşveren sayfaları (sadece işveren rolüne sahip kullanıcılar erişebilir) */}
-            <Route path="/my-jobs" element={<EmployerRoute element={<MyJobsPage />} />} />
-            <Route path="/post-job" element={<EmployerRoute element={<PostJobPage />} />} />
-            <Route path="/job-applications/:jobId" element={<EmployerRoute element={<JobApplicationsPage />} />} />
-            
-            {/* İş arayan sayfaları */}
-            <Route path="/saved-jobs" element={<JobSeekerRoute element={<SavedJobsPage />} />} />
-            <Route path="/my-applications" element={<JobSeekerRoute element={<MyApplicationsPage />} />} />
-            
-            {/* Ortak sayfalar */}
-            <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/job/:id" element={<JobDetailPage />} />
-            
-            {/* Yönlendirmeler */}
-            <Route path="/login" element={<Navigate to="/" />} />
-            <Route path="/register" element={<Navigate to="/" />} />
-            <Route path="/forgot-password" element={<Navigate to="/" />} />
-          </Route>
-        </Routes>
-      ) : (
-        <Routes>
-          <Route path="/" element={<AppWrapper />}>
-            <Route index element={<HomePage />} />
-            <Route path="/job/:id" element={<JobDetailPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </Route>
-        </Routes>
-      )}
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<AppWrapper />}>
+        <Route index element={<HomePage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="my-jobs"
+          element={
+            <RequireAuth>
+              <RequireEmployer>
+                <MyJobsPage />
+              </RequireEmployer>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="post-job"
+          element={
+            <RequireAuth>
+              <RequireEmployer>
+                <PostJobPage />
+              </RequireEmployer>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="job-applications/:jobId"
+          element={
+            <RequireAuth>
+              <RequireEmployer>
+                <JobApplicationsPage />
+              </RequireEmployer>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="my-applications"
+          element={
+            <RequireAuth>
+              <RequireJobSeeker>
+                <MyApplicationsPage />
+              </RequireJobSeeker>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          }
+        />
+
+        {/* Public routes */}
+        <Route path="job/:id" element={<JobDetailPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Route>
+    </Routes>
   );
+}
+
+// Kimlik doğrulama gerektiren route'lar için wrapper
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+// İşveren rolü gerektiren route'lar için wrapper
+function RequireEmployer({ children }: { children: JSX.Element }) {
+  const { isEmployer } = useAuth();
+  
+  if (!isEmployer()) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+// İş arayan rolü gerektiren route'lar için wrapper
+function RequireJobSeeker({ children }: { children: JSX.Element }) {
+  const { isJobSeeker } = useAuth();
+  
+  if (!isJobSeeker()) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 }
 
 export default App;

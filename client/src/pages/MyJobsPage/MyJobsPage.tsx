@@ -26,6 +26,7 @@ const MyJobsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
+  const location = window.location;
 
   // API URL'i için önceden tanımlı değerler (farklı ortamlar için)
   const API_ENDPOINTS = {
@@ -38,9 +39,29 @@ const MyJobsPage = () => {
   useEffect(() => {
     console.log("MyJobsPage - useEffect: İlanlar yükleniyor");
     
+    // URL'den token kontrolü yap
+    const urlParams = new URLSearchParams(location.search);
+    const urlToken = urlParams.get('token');
+    
+    if (urlToken) {
+      console.log("URL'den token bulundu, uzunluk:", urlToken.length);
+      
+      // URL'den gelen kullanıcı bilgilerini kontrol et
+      const urlUser = urlParams.get('user');
+      if (urlUser) {
+        try {
+          // URL'den gelen kullanıcı bilgilerini parse et
+          const userData = JSON.parse(decodeURIComponent(urlUser));
+          console.log("URL'den kullanıcı bilgileri alındı:", userData);
+        } catch (parseError) {
+          console.error("URL'den gelen kullanıcı bilgileri parse edilemedi:", parseError);
+        }
+      }
+    }
+    
     // Kimlik doğrulama kontrollerini kaldırıyoruz ve doğrudan ilanları çekiyoruz
     fetchMyJobs();
-  }, []);
+  }, [location.search]);
 
   // API'den kullanıcının kendi ilanlarını çek
   const fetchMyJobs = async () => {
@@ -53,15 +74,29 @@ const MyJobsPage = () => {
       
       console.log(`Kullanıcı ilanları çekiliyor, API URL: ${apiUrl}`);
       
+      // Önce URL'den token kontrolü yap
+      const urlParams = new URLSearchParams(location.search);
+      const urlToken = urlParams.get('token');
+      
       // Local storage erişim hatalarını ele al
       let token;
       try {
         token = localStorage.getItem('access_token');
       } catch (storageError) {
         console.error("LocalStorage erişim hatası:", storageError);
-        setError("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor. Çerezleri etkinleştirin veya gizli moddan çıkın.");
-        setLoading(false);
-        return;
+        // URL'den gelen token yoksa hata göster
+        if (!urlToken) {
+          setError("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor. Çerezleri etkinleştirin veya gizli moddan çıkın.");
+          setLoading(false);
+          return;
+        }
+        // URL'den gelen token varsa onu kullan
+        token = urlToken;
+      }
+      
+      // localStorage'dan gelen token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
       }
       
       if (!token) {
@@ -76,11 +111,16 @@ const MyJobsPage = () => {
       console.log("Token uzunluğu:", token.length);
       console.log("Token başlangıcı:", token.substring(0, 20) + "...");
       
+      // Bearer prefixi kontrolü ve eklemesi
+      if (!token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
+      }
+      
       // API isteği için başlıkları oluştur
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${token}` // JWT token'ı ekle
+        'Authorization': token // JWT token'ı ekle
       };
 
       console.log(`Backend isteği gönderiliyor... (URL: ${apiUrl})`);
@@ -206,19 +246,38 @@ const MyJobsPage = () => {
       
       const newStatus = !job.isActive;
       
+      // Önce URL'den token kontrolü yap
+      const urlParams = new URLSearchParams(location.search);
+      const urlToken = urlParams.get('token');
+      
       // Local storage erişim hatalarını ele al
       let token;
       try {
         token = localStorage.getItem('access_token');
       } catch (storageError) {
         console.error("LocalStorage erişim hatası:", storageError);
-        toast.error("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor.");
-        return;
+        // URL'den gelen token yoksa hata göster
+        if (!urlToken) {
+          toast.error("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor.");
+          return;
+        }
+        // URL'den gelen token varsa onu kullan
+        token = urlToken;
+      }
+      
+      // localStorage'dan gelen token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
       }
       
       if (!token) {
         toast.error("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
         return;
+      }
+      
+      // Bearer prefixi kontrolü ve eklemesi
+      if (!token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
       }
       
       // API'ye güncelleme isteği gönder - ÖNEMLİ: Production URL'ini kullan!
@@ -228,7 +287,7 @@ const MyJobsPage = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // JWT token'ı ekle
+          'Authorization': token // JWT token'ı ekle
         },
         body: JSON.stringify({
           is_active: newStatus
