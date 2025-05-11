@@ -216,33 +216,33 @@ const HomePage = () => {
     <PortalLayout title="Ana Sayfa">
       <div className="bg-white">
         {/* Hero section */}
-        <div className="relative isolate overflow-hidden pt-14">
-          <div className="absolute inset-y-0 right-1/2 -z-10 -mr-96 w-[200%] origin-top-right skew-x-[-30deg] bg-indigo-50 shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50"></div>
-          <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
+        <div className="relative isolate overflow-hidden pt-10 sm:pt-14">
+          <div className="absolute inset-y-0 right-1/2 -z-10 -mr-96 w-[200%] origin-top-right skew-x-[-30deg] bg-indigo-50 shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50 hidden sm:block"></div>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-16 lg:py-24 lg:px-8">
             <div className="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-6">
               <div className="max-w-xl lg:max-w-lg">
-                <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
                   Bandırma'da İş Bulmak Artık Daha Kolay
                 </h1>
-                <p className="mt-6 text-lg leading-8 text-gray-600">
+                <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-gray-600">
                   Bandırma ve çevresindeki en güncel iş ilanlarını keşfedin. 
                   İster deneyimli bir profesyonel olun, ister kariyerinize yeni başlıyor olun, 
                   size uygun pozisyonlar burada!
                 </p>
-                <div className="mt-10 flex items-center gap-x-6">
+                <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row items-center gap-4 sm:gap-x-6">
                   <a
                     href="#recent-jobs"
-                    className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="w-full sm:w-auto rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 text-center"
                   >
                     İş İlanlarını Gör
                   </a>
-                  <a href="#" className="text-sm font-semibold leading-6 text-gray-900">
+                  <a href="#" className="mt-3 sm:mt-0 text-sm font-semibold leading-6 text-gray-900">
                     İşveren Olarak Kayıt Ol <span aria-hidden="true">→</span>
                   </a>
                 </div>
               </div>
-              <div className="mt-14 flex justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
-                <div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-last xl:pt-80">
+              <div className="mt-10 sm:mt-14 flex justify-center sm:justify-end gap-4 sm:gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
+                <div className="hidden sm:block ml-auto w-28 sm:w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-last xl:pt-80">
                   <div className="relative">
                     <img
                       src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
@@ -252,7 +252,7 @@ const HomePage = () => {
                     <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
                   </div>
                 </div>
-                <div className="mr-auto w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
+                <div className="hidden sm:block mr-auto w-28 sm:w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
                   <div className="relative">
                     <img
                       src="https://images.unsplash.com/photo-1485217988980-11786ced9454?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
@@ -270,7 +270,7 @@ const HomePage = () => {
                     <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
                   </div>
                 </div>
-                <div className="w-44 flex-none space-y-8 pt-32 sm:pt-0">
+                <div className="hidden sm:block w-28 sm:w-44 flex-none space-y-8 pt-32 sm:pt-0">
                   <div className="relative">
                     <img
                       src="https://images.unsplash.com/photo-1670272502246-768d249768ca?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&crop=left&w=400&h=528&q=80"
@@ -288,19 +288,30 @@ const HomePage = () => {
                     <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
                   </div>
                 </div>
+                {/* Sadece mobil ekranlarda gösterilecek tek resim */}
+                <div className="sm:hidden w-full max-w-[280px]">
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1485217988980-11786ced9454?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
+                      alt=""
+                      className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
+                    />
+                    <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Recent jobs section */}
-        <div id="recent-jobs" className="py-16 sm:py-24">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div id="recent-jobs" className="py-10 sm:py-16 lg:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Güncel İş İlanları
               </h2>
-              <p className="mt-2 text-lg leading-8 text-gray-600">
+              <p className="mt-2 text-base sm:text-lg leading-7 sm:leading-8 text-gray-600">
                 Bandırma ve çevresindeki en yeni iş fırsatlarını keşfedin
               </p>
               {error && (
@@ -317,20 +328,20 @@ const HomePage = () => {
             </div>
             
             {loading ? (
-              <div className="mt-16 text-center py-20">
+              <div className="mt-10 sm:mt-16 text-center py-20">
                 <div className="spinner"></div>
                 <p className="mt-2 text-gray-500">İş İlanları Yükleniyor...</p>
               </div>
             ) : recentJobs.length === 0 ? (
-              <div className="mt-16 text-center py-20">
+              <div className="mt-10 sm:mt-16 text-center py-20">
                 <p className="text-gray-500">Henüz ilan bulunmuyor.</p>
               </div>
             ) : (
-              <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+              <div className="mx-auto mt-10 sm:mt-16 grid max-w-2xl grid-cols-1 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
                 {recentJobs.map((job) => (
                   <article key={job.id} className="flex flex-col items-start border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div className="w-full bg-indigo-100 p-4">
-                      <div className="flex items-center gap-x-4">
+                    <div className="w-full bg-indigo-100 p-3 sm:p-4">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-4">
                         <span className="text-xs rounded bg-indigo-600 px-2 py-1 font-medium text-white">
                           {job.jobType}
                         </span>
@@ -338,8 +349,8 @@ const HomePage = () => {
                           {new Date(job.createdAt).toLocaleDateString('tr-TR')}
                         </time>
                       </div>
-                      <div className="relative mt-3">
-                        <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                      <div className="relative mt-2 sm:mt-3">
+                        <h3 className="text-base sm:text-lg font-semibold leading-6 text-gray-900">
                           <a href={`/job/${job.id}`}>
                             <span className="absolute inset-0" />
                             {job.jobTitle}
@@ -348,11 +359,11 @@ const HomePage = () => {
                         <p className="text-sm text-gray-600 font-medium mt-1">{job.companyName}</p>
                       </div>
                     </div>
-                    <div className="w-full p-4">
+                    <div className="w-full p-3 sm:p-4">
                       <p className="mt-1 line-clamp-3 text-sm leading-6 text-gray-600">
                         {job.description}
                       </p>
-                      <div className="mt-4 flex gap-2 flex-wrap">
+                      <div className="mt-3 sm:mt-4 flex gap-2 flex-wrap">
                         {job.requiredSkills && job.requiredSkills.slice(0, 3).map((skill, index) => (
                           <span key={index} className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
                             {skill}
@@ -365,7 +376,7 @@ const HomePage = () => {
                         )}
                       </div>
                     </div>
-                    <div className="w-full border-t border-gray-200 p-4 flex justify-between items-center">
+                    <div className="w-full border-t border-gray-200 p-3 sm:p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0">
                       <div className="flex items-center text-xs text-gray-500">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -377,7 +388,7 @@ const HomePage = () => {
                         {job.salary}
                       </div>
                     </div>
-                    <div className="w-full p-4 bg-gray-50 flex justify-center">
+                    <div className="w-full p-3 sm:p-4 bg-gray-50 flex justify-center">
                       <Link 
                         to={`/job/${job.id}`} 
                         className="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
@@ -391,7 +402,7 @@ const HomePage = () => {
               </div>
             )}
 
-            <div className="mt-12 flex justify-center">
+            <div className="mt-8 sm:mt-12 flex justify-center">
               <button
                 onClick={fetchJobs}
                 className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-200 hover:bg-indigo-50"

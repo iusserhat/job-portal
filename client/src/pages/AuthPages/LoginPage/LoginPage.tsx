@@ -5,25 +5,27 @@ import { Link } from "react-router-dom";
 
 const LoginPage = () => {
   return (
-    <PublicLayout title="Sign in">
-      <div className="mx-auto w-full max-w-sm lg:w-96">
-        <div>
-          <Logo />
-          <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Sign in to your account
+    <PublicLayout title="Giriş Yap">
+      <div className="mx-auto w-full px-4 sm:px-0 sm:max-w-sm lg:w-96">
+        <div className="text-center sm:text-left">
+          <div className="flex justify-center sm:justify-start">
+            <Logo />
+          </div>
+          <h2 className="mt-4 text-xl sm:text-2xl font-bold leading-9 tracking-tight text-gray-900">
+            Hesabınıza Giriş Yapın
           </h2>
           <p className="mt-2 text-sm leading-6 text-gray-500">
-            Not a member?{" "}
+            Üye değil misiniz?{" "}
             <Link
               to="/register"
               className="font-semibold text-indigo-600 hover:text-indigo-500"
             >
-              Register now
+              Şimdi Kayıt Olun
             </Link>
           </p>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
           <LoginForm />
 
           {/* <div className="mt-10">

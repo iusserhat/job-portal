@@ -316,15 +316,15 @@ const JobDetailPage = () => {
 
   return (
     <PortalLayout title={job.jobTitle}>
-      <div className="container mx-auto py-10 px-4 max-w-5xl">
+      <div className="container mx-auto py-6 sm:py-10 px-4 max-w-5xl">
         {/* İş İlanı Header */}
-        <div className="bg-white rounded-lg shadow p-8 border-t-4 border-indigo-600">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-8 border-t-4 border-indigo-600">
           <div className="flex flex-col md:flex-row md:items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{job.jobTitle}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{job.jobTitle}</h1>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="text-indigo-600 font-medium">{job.companyName}</span>
-                <span className="text-gray-500">•</span>
+                <span className="text-gray-500 hidden sm:inline">•</span>
                 <div className="flex items-center text-gray-500">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -332,11 +332,11 @@ const JobDetailPage = () => {
                   </svg>
                   {job.location}
                 </div>
-                <span className="text-gray-500">•</span>
+                <span className="text-gray-500 hidden sm:inline">•</span>
                 <div className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
                   {job.jobType}
                 </div>
-                <span className="text-gray-500">•</span>
+                <span className="text-gray-500 hidden sm:inline">•</span>
                 <div className="text-gray-500 text-sm">
                   İlan Tarihi: {new Date(job.createdAt).toLocaleDateString('tr-TR')}
                 </div>
@@ -356,13 +356,13 @@ const JobDetailPage = () => {
           </div>
           
           {/* İş İlanı İçeriği */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">İş Açıklaması</h2>
+          <div className="mt-6 sm:mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3 sm:mb-4">İş Açıklaması</h2>
             <p className="text-gray-700 whitespace-pre-line">
               {job.description}
             </p>
             
-            <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Aranan Nitelikler</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mt-6 sm:mt-8 mb-3 sm:mb-4">Aranan Nitelikler</h2>
             <div className="flex flex-wrap gap-2">
               {job.requiredSkills && job.requiredSkills.map((skill, index) => (
                 <span key={index} className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-sm font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
@@ -375,12 +375,12 @@ const JobDetailPage = () => {
         
         {/* Başvuru Formu */}
         {isAuthenticated ? (
-          <div className="mt-10 bg-white rounded-lg shadow p-8">
-            <h2 className="text-2xl font-semibold text-gray-900">Bu İlana Başvur</h2>
-            <p className="mt-2 text-gray-600">Bilgilerinizi doldurun ve bu pozisyon için başvurunuzu gönderin.</p>
+          <div className="mt-6 sm:mt-10 bg-white rounded-lg shadow p-4 sm:p-8">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Bu İlana Başvur</h2>
+            <p className="mt-2 text-sm sm:text-base text-gray-600">Bilgilerinizi doldurun ve bu pozisyon için başvurunuzu gönderin.</p>
             
             {applicationSuccess && (
-              <div className="mt-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded" role="alert">
+              <div className="mt-4 sm:mt-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded" role="alert">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -541,19 +541,19 @@ const JobDetailPage = () => {
             )}
           </div>
         ) : (
-          <div className="mt-10 bg-white rounded-lg shadow p-8 text-center">
-            <h3 className="text-xl font-medium text-gray-900">Bu ilana başvurmak için giriş yapmalısınız</h3>
-            <p className="mt-2 text-gray-600">Hesabınız yoksa hemen ücretsiz kayıt olabilirsiniz.</p>
-            <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+          <div className="mt-6 sm:mt-10 bg-white rounded-lg shadow p-4 sm:p-8 text-center">
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900">Bu ilana başvurmak için giriş yapmalısınız</h3>
+            <p className="mt-2 text-sm sm:text-base text-gray-600">Hesabınız yoksa hemen ücretsiz kayıt olabilirsiniz.</p>
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center gap-4">
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
               >
                 Giriş Yap
               </button>
               <button
                 onClick={() => navigate('/register')}
-                className="inline-flex items-center rounded-md px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50"
+                className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50"
               >
                 Kayıt Ol
               </button>
