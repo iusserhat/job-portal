@@ -47,18 +47,18 @@ class Application {
     // Özel CORS middleware'imizi ekleyelim (diğer tüm middleware'lerden önce)
     this.server.use(corsMiddleware);
     
+    // OPTIONS isteklerini global olarak karşıla
+    this.server.options('*', (req, res) => {
+      // CORS header'larını ekle
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      res.status(200).end();
+    });
+    
     // Ek olarak cors kütüphanesini de kullanıyoruz
     this.server.use(cors({
-      origin: function(origin, callback) {
-        // undefined origin'e izin ver (Postman gibi araçlar için)
-        if(!origin) return callback(null, true);
-        
-        if(allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
-          callback(null, true);
-        } else {
-          callback(new Error('CORS policy: Not allowed by CORS'));
-        }
-      },
+      origin: '*', // Tüm kaynaklara izin ver (daha güvenli bir ortamda belirli domainlere sınırlayın)
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
@@ -67,18 +67,6 @@ class Application {
     
     this.server.use(express.json());
     this.server.use(express.urlencoded({ extended: true }));
-    
-    // CORS ön kontrol isteklerini her durumda kabul et
-    this.server.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
-      
-      if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-      }
-      next();
-    });
   }
 
   private setupHealthChecks() {

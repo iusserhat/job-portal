@@ -165,14 +165,17 @@ export default class AuthController {
     try {
       // CORS header'ları ekleyelim
       res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
       res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
       
       if (req.method === 'OPTIONS') {
         return res.status(200).end();
       }
       
-      console.log("Signup isteği alındı:", req.body);
+      console.log("Signup isteği alındı, body:", JSON.stringify(req.body));
+      
+      // Request headers'ı logla
+      console.log("Request headers:", JSON.stringify(req.headers));
       
       const payload = req.body;
       const { user_type_name } = payload;
@@ -224,7 +227,7 @@ export default class AuthController {
       });
     } catch (error) {
       console.error("Kayıt hatası:", error);
-      throw error;
+      next(error);
     }
   }
 
