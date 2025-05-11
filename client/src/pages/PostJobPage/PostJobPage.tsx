@@ -65,7 +65,7 @@ const PostJobPage = () => {
       };
       
       // JWT token kullanarak normal jobs API'yi çağır
-      const apiUrl = "http://localhost:5555/api/v1/jobs";
+      const apiUrl = `${import.meta.env.VITE_API_URL || "https://job-portal-gfus.onrender.com"}/api/v1/jobs`;
       
       console.log("API isteği gönderiliyor:", apiUrl);
       
