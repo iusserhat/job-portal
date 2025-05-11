@@ -345,7 +345,6 @@ const JobApplicationsPage = () => {
   return (
     <PortalLayout title={`Başvurular: ${job?.jobTitle || 'Yükleniyor...'}`}>
       <div className="px-4 sm:px-6 lg:px-8 py-8">
-        {console.log("JobApplicationsPage - Sayfa render ediliyor, job:", job, "applications:", applications)}
         {/* Üst bilgi kısmı */}
         <div className="pb-5 border-b border-gray-200 mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <div>

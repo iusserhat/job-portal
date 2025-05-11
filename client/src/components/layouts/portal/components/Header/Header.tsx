@@ -13,7 +13,6 @@ import Logo from "./Logo";
 import { useAuth } from "@/providers";
 import { Dialog } from "@headlessui/react";
 import ProfileAvatar from "./ProfileAvatar";
-import DebugInfo from "@/components/debug/DebugInfo";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,14 +40,6 @@ const Header = () => {
   const isJobSeekerValue = isJobSeeker();
   const storedUserRole = localStorage.getItem("user_role");
   
-  console.log("Header - Menu seçimi:", {
-    kullanıcıTipi: user?.user_type_id,
-    isEmployer: isEmployerValue,
-    isJobSeeker: isJobSeekerValue,
-    storedUserRole,
-    seçilenMenü: isEmployerValue ? "İşveren menüsü" : isJobSeekerValue ? "İş arayan menüsü" : "Belirsiz menü"
-  });
-  
   // Kullanıcı tipi kontrolüne göre menüyü belirle
   // Öncelik sırasına göre kontrol ediyoruz
   let navigation = [];
@@ -56,29 +47,21 @@ const Header = () => {
   // StorageService'den okunan rol daha güvenilir, önce onu kontrol edelim
   if (storedUserRole === "employer") {
     navigation = employerLinks;
-    console.log("Header - localStorage'dan işveren rolü tespit edildi, işveren menüsü gösteriliyor");
   } else if (storedUserRole === "jobseeker") {
     navigation = jobSeekerLinks;
-    console.log("Header - localStorage'dan iş arayan rolü tespit edildi, iş arayan menüsü gösteriliyor");
   }
   // localStorage'da rol yoksa veya unknown ise, isEmployer/isJobSeeker fonksiyonlarını kullan
   else if (isEmployerValue) {
     navigation = employerLinks;
-    console.log("Header - isEmployer() fonksiyonu ile işveren tespit edildi");
   } else if (isJobSeekerValue) {
     navigation = jobSeekerLinks;
-    console.log("Header - isJobSeeker() fonksiyonu ile iş arayan tespit edildi");
   } else {
     // Varsayılan olarak iş arayan menüsü göster
     navigation = jobSeekerLinks;
-    console.log("Header - Rol tespit edilemedi, varsayılan iş arayan menüsü gösteriliyor");
   }
   
   return (
     <header className="shrink-0 border-b border-gray-200 bg-white sticky top-0 z-10">
-      {/* Debug bilgilerini göster */}
-      <DebugInfo user={user} isEmployer={isEmployer()} />
-      
       <nav
         className="mx-auto flex items-center justify-between p-6 lg:px-8"
         aria-label="Global"
