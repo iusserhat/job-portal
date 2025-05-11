@@ -63,8 +63,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       console.log(`AuthProvider - Login: Kullanıcı rolü belirlendi: ${userRole}`);
       
+      // Token'ı önce bir değişkende oluştur ve doğrula
+      const tokenToStore = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+      
       // Ardından yeni verileri kaydedelim
-      StorageService.setItem("access_token", token);
+      StorageService.setItem("access_token", tokenToStore);
       
       // Kullanıcı rolünü ayrıca saklayalım
       StorageService.setItem("user_role", userRole);
@@ -84,11 +87,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Doğrulama: localStorage verisi kontrolü
       const savedUserData = StorageService.getItem("user_data");
       const savedUserRole = StorageService.getItem("user_role");
-      if (savedUserData) {
+      const savedToken = StorageService.getItem("access_token");
+      if (savedUserData && savedToken) {
         try {
           const parsedUser = JSON.parse(savedUserData);
           console.log("AuthProvider - Login: localStorage'dan okunan kullanıcı:", parsedUser);
           console.log("AuthProvider - Login: localStorage'dan okunan rol:", savedUserRole);
+          console.log("AuthProvider - Login: localStorage'dan okunan token başlangıcı:", 
+                     savedToken.substring(0, 20) + "...");
         } catch (error) {
           console.error("AuthProvider - Login: localStorage'daki kullanıcı parse hatası", error);
         }

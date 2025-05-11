@@ -48,13 +48,11 @@ const MyJobsPage = () => {
     setError(null);
 
     try {
-      // Farklı API URL'lerini dene
-      const apiUrls = [
-        API_ENDPOINTS.local,
-        API_ENDPOINTS.production
-      ];
+      // Öncelikle üretim ortamındaki API URL'ini kullan
+      // Netlify'a deploy edilmiş frontend için Render.com'daki API'yi kullan
+      const apiUrl = API_ENDPOINTS.production;
       
-      console.log("Kullanıcı ilanları çekiliyor, denemeler yapılacak...");
+      console.log(`Kullanıcı ilanları çekiliyor, API URL: ${apiUrl}`);
       
       // Local storage'dan JWT token'ı al
       const token = localStorage.getItem('access_token');
@@ -78,61 +76,31 @@ const MyJobsPage = () => {
         'Authorization': `Bearer ${token}` // JWT token'ı ekle
       };
 
-      // Her API URL'ini sırayla dene
-      let response = null;
-      let error = null;
-      let apiUrl = "";
+      console.log(`Backend isteği gönderiliyor... (URL: ${apiUrl})`);
       
-      for (let i = 0; i < apiUrls.length; i++) {
-        apiUrl = apiUrls[i];
-        console.log(`Backend isteği gönderiliyor... (Deneme ${i+1}/${apiUrls.length}, URL: ${apiUrl})`);
+      // Backend'e istek gönder
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers,
+          // CORS sorunu için credentials'ı include yerine same-origin yapalım
+          credentials: 'same-origin',
+          // CORS modunu belirtmeyelim, tarayıcı otomatik belirlesin
+          // İstek zaman aşımı 15 saniye
+          signal: AbortSignal.timeout(15000)
+        });
         
-        try {
-          // Backend'e istek gönder
-          response = await fetch(apiUrl, {
-            method: 'GET',
-            headers,
-            credentials: 'include', // Cookie'leri ve kimlik doğrulama bilgilerini gönder
-            mode: 'cors', // CORS modunu açıkça belirt
-            // İstek zaman aşımı 15 saniye
-            signal: AbortSignal.timeout(15000)
-          });
-          
-          console.log(`Deneme ${i+1} - HTTP durum kodu:`, response.status);
-          
-          // Başarılı yanıt alındıysa döngüden çık
-          if (response.ok) {
-            console.log(`Başarılı yanıt alındı: ${apiUrl}`);
-            break;
-          }
-        } catch (err) {
-          error = err;
-          console.error(`Deneme ${i+1} başarısız oldu:`, err);
-          
-          // Son deneme değilse devam et
-          if (i < apiUrls.length - 1) {
-            console.log("Bir sonraki URL deneniyor...");
-            continue;
-          }
-        }
-      }
-      
-      // Hiçbir API yanıt vermediyse
-      if (!response || !response.ok) {
-        if (error) {
-          throw error;
-        }
+        console.log(`HTTP durum kodu:`, response.status);
         
-        if (response) {
-          // HTTP durum kodunu kontrol et
-          console.error("Tüm API'ler başarısız oldu. Son yanıt:", response.status, response.statusText);
-          
+        // Başarılı yanıt alınmadıysa
+        if (!response.ok) {
           // Yetkilendirme hatası ise
           if (response.status === 401) {
             // Token'ı yenile veya kullanıcıyı login sayfasına yönlendir
             console.error("401 - Yetkisiz erişim. Token geçersiz veya süresi dolmuş olabilir.");
             localStorage.removeItem('access_token'); // Geçersiz token'ı kaldır
             setError("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+            setLoading(false);
             return;
           }
           
@@ -150,65 +118,69 @@ const MyJobsPage = () => {
           }
           
           throw new Error(`İlanlar alınamadı: ${response.status} ${response.statusText} - ${errorDetail}`);
-        } else {
-          throw new Error("Sunucuya bağlanılamadı, yanıt alınamadı");
         }
-      }
-      
-      let data;
-      try {
-        data = await response.json();
-        console.log("API yanıtı:", data);
-      } catch (jsonError) {
-        console.error("API yanıtı JSON olarak işlenemedi:", jsonError);
-        setError("API yanıtı beklendiği gibi değil.");
-        return;
-      }
-      
-      if (data && data.success && data.data && Array.isArray(data.data)) {
-        console.log("MongoDB'den alınan kullanıcı ilanları:", data.data.length);
         
-        // MongoDB'den gelen veriyi formatla
-        const formattedJobs = data.data.map((job: any) => ({
-          id: job._id,
-          _id: job._id,
-          jobTitle: job.job_title || "İsimsiz İlan",
-          companyName: job.company_name || "İsimsiz Şirket",
-          location: job.location_name || "Belirtilmemiş",
-          jobType: job.job_type_id?.name || "Belirtilmemiş",
-          createdAt: job.created_date || new Date().toISOString(),
-          applicantsCount: job.applications_count || 0,
-          isActive: job.is_active !== undefined ? job.is_active : true,
+        let data;
+        try {
+          data = await response.json();
+          console.log("API yanıtı:", data);
+        } catch (jsonError) {
+          console.error("API yanıtı JSON olarak işlenemedi:", jsonError);
+          setError("API yanıtı beklendiği gibi değil.");
+          setLoading(false);
+          return;
+        }
+        
+        if (data && data.success && data.data && Array.isArray(data.data)) {
+          console.log("MongoDB'den alınan kullanıcı ilanları:", data.data.length);
           
-          // Orijinal alanları da sakla
-          job_title: job.job_title,
-          company_name: job.company_name,
-          location_name: job.location_name,
-          is_active: job.is_active
-        }));
-        
-        console.log("Formatlanmış kullanıcı ilanları:", formattedJobs);
-        
-        if (formattedJobs.length > 0) {
-          setJobs(formattedJobs);
-          toast.success(`${formattedJobs.length} ilan başarıyla yüklendi`);
+          // MongoDB'den gelen veriyi formatla
+          const formattedJobs = data.data.map((job: any) => ({
+            id: job._id,
+            _id: job._id,
+            jobTitle: job.job_title || "İsimsiz İlan",
+            companyName: job.company_name || "İsimsiz Şirket",
+            location: job.location_name || "Belirtilmemiş",
+            jobType: job.job_type_id?.name || "Belirtilmemiş",
+            createdAt: job.created_date || new Date().toISOString(),
+            applicantsCount: job.applications_count || 0,
+            isActive: job.is_active !== undefined ? job.is_active : true,
+            
+            // Orijinal alanları da sakla
+            job_title: job.job_title,
+            company_name: job.company_name,
+            location_name: job.location_name,
+            is_active: job.is_active
+          }));
+          
+          console.log("Formatlanmış kullanıcı ilanları:", formattedJobs);
+          
+          if (formattedJobs.length > 0) {
+            setJobs(formattedJobs);
+            toast.success(`${formattedJobs.length} ilan başarıyla yüklendi`);
+          } else {
+            console.log("İlan bulunamadı, boş dizi döndü");
+            setJobs([]);
+            toast.info("Henüz bir iş ilanı yayınlamamışsınız");
+          }
         } else {
-          console.log("İlan bulunamadı, boş dizi döndü");
+          console.warn("MongoDB'den alınan veri formatı uyumsuz veya boş:", data);
+          setError("Veriler beklenen formatta değil");
           setJobs([]);
-          toast.info("Henüz bir iş ilanı yayınlamamışsınız");
         }
-      } else {
-        console.warn("MongoDB'den alınan veri formatı uyumsuz veya boş:", data);
-        setError("Veriler beklenen formatta değil");
+      } catch (error: any) {
+        console.error("İş ilanları alınırken hata:", error);
+        const errorMessage = error.message || "Bilinmeyen hata";
+        setError(`İlanlarınız yüklenirken bir hata oluştu: ${errorMessage}. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.`);
+        // Hata durumunda boş dizi gösterelim
         setJobs([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error: any) {
-      console.error("İş ilanları alınırken hata:", error);
-      const errorMessage = error.message || "Bilinmeyen hata";
-      setError(`İlanlarınız yüklenirken bir hata oluştu: ${errorMessage}. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.`);
-      // Hata durumunda boş dizi gösterelim
+    } catch (outerError: any) {
+      console.error("Beklenmeyen bir hata oluştu:", outerError);
+      setError("Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
       setJobs([]);
-    } finally {
       setLoading(false);
     }
   };
