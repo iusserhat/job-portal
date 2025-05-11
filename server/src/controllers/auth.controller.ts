@@ -164,10 +164,17 @@ export default class AuthController {
   public static async signup(req: Request, res: Response, next: NextFunction) {
     try {
       // CORS header'ları ekleyelim
-      res.header('Access-Control-Allow-Origin', '*');
+      const origin = req.headers.origin;
+      if (origin) {
+        res.header('Access-Control-Allow-Origin', origin);
+      } else {
+        res.header('Access-Control-Allow-Origin', '*');
+      }
+      res.header('Access-Control-Allow-Credentials', 'true');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
       res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
       
+      // OPTIONS isteğini hemen yanıtla
       if (req.method === 'OPTIONS') {
         return res.status(200).end();
       }
@@ -179,6 +186,12 @@ export default class AuthController {
       
       const payload = req.body;
       const { user_type_name } = payload;
+
+      // Eğer payload içinde user_type_name yoksa hatayı yakala
+      if (!user_type_name) {
+        console.error("Eksik kullanıcı tipi, gelen veri:", payload);
+        throw new BadRequestError("User type name is required", []);
+      }
 
       // Find the user type where name [job_seeker, hr_recruiter]
       const userType = await UserType.findOne({

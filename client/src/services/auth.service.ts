@@ -97,33 +97,65 @@ export default class AuthService {
   // Register user
   public async register(payload: IModels.IRegisterPayload, options?: any) {
     try {
-      // Gerçek API isteği yap
+      // İki farklı yaklaşımı deneyelim ve hata durumunda diğerine geçelim
       try {
-        // URL'yi düzelt
-        const registerUrl = "api/v1/auth/signup"; // Doğru API path 
-        console.log("Register URL:", registerUrl);
+        // İlk yaklaşım: HttpService üzerinden
+        console.log("HttpService ile register deneniyor...");
         
-        // Debug: payload içeriğini kontrol et
+        const signupUrl = "api/v1/auth/signup";
+        console.log("Register URL (HttpService):", signupUrl);
         console.log("Register payload:", JSON.stringify(payload));
         
-        const response = await this.http
-          .service()
-          .post<any, IModels.IRegisterPayload>(
-            registerUrl,
-            payload,
-            options
-          );
+        const response = await this.http.service().post<any, IModels.IRegisterPayload>(
+          signupUrl,
+          payload,
+          options
+        );
         
-        console.log("API'den gelen register yanıtı:", response);
+        console.log("API'den gelen register yanıtı (HttpService):", response);
         return response;
-      } catch (apiError: any) {
-        console.error("API register hatası:", apiError);
+      } 
+      catch (axiosError: any) {
+        console.error("HttpService register hatası, fetch API ile deneniyor:", axiosError);
         
-        // API hatasını direkt fırlat, mock veri kullanma
-        if (apiError.response && apiError.response.data) {
-          throw apiError;
-        } else {
-          throw new Error("Sunucu bağlantı hatası. Lütfen daha sonra tekrar deneyiniz.");
+        // İkinci yaklaşım: Doğrudan fetch API kullan
+        try {
+          // Tam API URL'sini belirt
+          const apiUrl = import.meta.env.VITE_API_URL as string || "https://job-portal-gfus.onrender.com";
+          let registerUrl = `${apiUrl}/api/v1/auth/signup`; 
+          
+          // URL'nin sonunda / varsa kaldır ve /api/v1/auth/signup ekle
+          if (apiUrl.endsWith('/')) {
+            registerUrl = `${apiUrl}api/v1/auth/signup`;
+          }
+          
+          console.log("Register URL (fetch):", registerUrl);
+          console.log("Register payload (fetch):", JSON.stringify(payload));
+          
+          const response = await fetch(registerUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Origin': window.location.origin
+            },
+            mode: 'cors',
+            body: JSON.stringify(payload)
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("Kayıt hatası:", response.status, response.statusText, errorData);
+            throw new Error(errorData.message || "Kayıt işlemi başarısız oldu");
+          }
+          
+          const data = await response.json();
+          console.log("API'den gelen register yanıtı (fetch):", data);
+          return data;
+        } 
+        catch (fetchError: any) {
+          console.error("Fetch API register hatası:", fetchError);
+          throw fetchError;
         }
       }
     } catch (error) {

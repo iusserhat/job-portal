@@ -18,6 +18,7 @@ class Application {
     this.server = express();
 
     this.environment();
+    this.setupCORS();
     this.middlewares();
     this.setupHealthChecks();
     this.database();
@@ -31,42 +32,57 @@ class Application {
     dotenv.config();
   }
 
-  private middlewares() {
-    // CORS ayarları - Netlify domain'i eklendi
+  private setupCORS() {
+    // CORS ayarları için tüm olası client origin'lerini tanımlayalım
     const allowedOrigins = [
-      'http://localhost:5137', 
-      'http://localhost:3000', 
-      'http://127.0.0.1:5137',
-      'https://iusserhat-job-portal.netlify.app',
-      'https://job-portal-frontend.netlify.app',
-      'https://job-portal-client.netlify.app',
-      'https://serene-begonia-ded421.netlify.app', // Yeni Netlify domain
-      '*'
+      'https://serene-begonia-ded421.netlify.app',
+      'https://job-portal-gfus.onrender.com',
+      'http://localhost:5138', 
+      'http://localhost:5137',
+      'http://localhost:3000'
     ];
+  
+    // Temel CORS middleware'ini ayarlayalım
+    this.server.use(cors({
+      origin: function(origin, callback) {
+        // Origin boş olabilir (örn. doğrudan Postman istekleri için)
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          console.log('CORS origin denied:', origin);
+          callback(null, true); // Üretimde tüm origin'lere izin verelim şimdilik
+        }
+      },
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+      credentials: true
+    }));
     
-    // Özel CORS middleware'imizi ekleyelim (diğer tüm middleware'lerden önce)
-    this.server.use(corsMiddleware);
-    
-    // OPTIONS isteklerini global olarak karşıla
+    // OPTIONS isteklerine direkt cevap vermek için
     this.server.options('*', (req, res) => {
-      // CORS header'larını ekle
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
       res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
       res.status(200).end();
     });
-    
-    // Ek olarak cors kütüphanesini de kullanıyoruz
-    this.server.use(cors({
-      origin: '*', // Tüm kaynaklara izin ver (daha güvenli bir ortamda belirli domainlere sınırlayın)
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-      exposedHeaders: ['Content-Length', 'Content-Type', 'Authorization']
-    }));
-    
+  }
+
+  private middlewares() {
     this.server.use(express.json());
     this.server.use(express.urlencoded({ extended: true }));
+    
+    // Her istekte CORS başlıklarını eklemek için middleware
+    this.server.use((req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      
+      if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+      }
+      
+      next();
+    });
   }
 
   private setupHealthChecks() {
@@ -93,7 +109,6 @@ class Application {
     
     // Render özel health check endpoint'i
     this.server.get('/health', (req, res) => {
-      // CORS başlıklarını ekle
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
       res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');

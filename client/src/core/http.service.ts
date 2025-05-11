@@ -10,14 +10,19 @@ import StorageService from "./storage.service";
 export default class HttpService {
   private http: AxiosInstance;
   // Backend URL'ini doğrudan tanımlayalım, Netlify'da çevresel değişken olarak ayarlanmış olacak
-  private baseURL: string = import.meta.env.VITE_API_URL as string || "https://job-portal-backend-7dvf.onrender.com";
+  private baseURL: string = import.meta.env.VITE_API_URL as string || "https://job-portal-gfus.onrender.com";
 
   constructor() {
+    // API URL'in sonunda / varsa kaldıralım
+    if (this.baseURL.endsWith('/')) {
+      this.baseURL = this.baseURL.slice(0, -1);
+    }
+    
     console.log("API URL kullanılıyor:", this.baseURL);
     
     this.http = axios.create({
       baseURL: this.baseURL,
-      withCredentials: false,
+      withCredentials: false, // CORS sorunları için false olarak ayarlandı
       headers: this.setupHeaders(),
     });
 
@@ -60,6 +65,15 @@ export default class HttpService {
         // Bu endpointe özel debug kontrolü
         if (url.includes("auth/login") || url.includes("api/v1/auth/login")) {
           console.log("AUTH LOGIN İSTEĞİ:", {
+            url: `${this.baseURL}/${cleanUrl}`,
+            data: data,
+            headers: this.setupHeaders()
+          });
+        }
+        
+        // Aynısını register için de yapalım
+        if (url.includes("auth/signup") || url.includes("api/v1/auth/signup")) {
+          console.log("AUTH SIGNUP İSTEĞİ:", {
             url: `${this.baseURL}/${cleanUrl}`,
             data: data,
             headers: this.setupHeaders()
@@ -118,6 +132,8 @@ export default class HttpService {
       "Content-Type": hasAttachment
         ? "multipart/form-data"
         : "application/json",
+      "Accept": "application/json",
+      "Origin": window.location.origin,
       ...this.getAuthorization,
     };
   }
