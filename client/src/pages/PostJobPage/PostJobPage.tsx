@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import PortalLayout from "@/components/layouts/portal/PortalLayout";
@@ -30,6 +30,7 @@ const initialValues = {
 
 const PostJobPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, user } = useAuth();
 
@@ -40,8 +41,30 @@ const PostJobPage = () => {
     try {
       console.log("PostJobPage - İş ilanı oluşturuluyor:", values);
       
-      // JWT token'ı kontrol et
-      const token = localStorage.getItem('access_token');
+      // JWT token için önce URL kontrolü yap
+      const urlParams = new URLSearchParams(location.search);
+      const urlToken = urlParams.get('token');
+      
+      // Token almayı dene
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        // URL'den token varsa onu kullan
+        if (urlToken) {
+          token = urlToken;
+        } else {
+          toast.error("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor. Çerezleri etkinleştirin veya gizli moddan çıkın.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      
+      // localStorage'dan token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
+      }
       
       if (!token) {
         toast.error("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
@@ -64,8 +87,13 @@ const PostJobPage = () => {
         required_skills: requiredSkills
       };
       
-      // JWT token kullanarak normal jobs API'yi çağır
-      const apiUrl = `${import.meta.env.VITE_API_URL || "https://job-portal-gfus.onrender.com"}/api/v1/jobs`;
+      // Bearer prefix kontrolü
+      if (!token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
+      }
+      
+      // Production API URL'i kullan
+      const apiUrl = `https://job-portal-gfus.onrender.com/api/v1/jobs`;
       
       console.log("API isteği gönderiliyor:", apiUrl);
       
@@ -73,9 +101,12 @@ const PostJobPage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Authorization": token
         },
-        body: JSON.stringify(jobData)
+        body: JSON.stringify(jobData),
+        // CORS sorunu çözmek için
+        credentials: 'omit',
+        mode: 'cors'
       });
       
       // API yanıtını kontrol et
@@ -99,9 +130,20 @@ const PostJobPage = () => {
       toast.success("İş ilanı başarıyla oluşturuldu!");
       resetForm();
       
-      // İlanlarım sayfasına yönlendir
+      // İlanlarım sayfasına yönlendir - URL parametresi ile token taşı
       setTimeout(() => {
-        navigate("/my-jobs");
+        // URL parametresi ile token varsa onu da yeni URL'e ekle
+        if (urlToken) {
+          const urlUser = urlParams.get('user');
+          const queryParams = new URLSearchParams();
+          queryParams.set('token', urlToken);
+          if (urlUser) {
+            queryParams.set('user', urlUser);
+          }
+          navigate(`/my-jobs?${queryParams.toString()}`);
+        } else {
+          navigate("/my-jobs");
+        }
       }, 1500);
     } catch (error) {
       console.error("İş ilanı oluşturulurken hata:", error);
