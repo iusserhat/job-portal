@@ -49,13 +49,20 @@ const MyJobsPage = () => {
 
     try {
       // Öncelikle üretim ortamındaki API URL'ini kullan
-      // Netlify'a deploy edilmiş frontend için Render.com'daki API'yi kullan
       const apiUrl = API_ENDPOINTS.production;
       
       console.log(`Kullanıcı ilanları çekiliyor, API URL: ${apiUrl}`);
       
-      // Local storage'dan JWT token'ı al
-      const token = localStorage.getItem('access_token');
+      // Local storage erişim hatalarını ele al
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        setError("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor. Çerezleri etkinleştirin veya gizli moddan çıkın.");
+        setLoading(false);
+        return;
+      }
       
       if (!token) {
         console.error("Token bulunamadı, kullanıcı giriş yapmamış olabilir");
@@ -83,11 +90,9 @@ const MyJobsPage = () => {
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers,
-          // CORS sorunu için credentials'ı include yerine same-origin yapalım
-          credentials: 'same-origin',
-          // CORS modunu belirtmeyelim, tarayıcı otomatik belirlesin
-          // İstek zaman aşımı 15 saniye
-          signal: AbortSignal.timeout(15000)
+          // CORS sorunu çözmek için
+          credentials: 'omit', // No credentials
+          mode: 'cors' // Explicit CORS mode
         });
         
         console.log(`HTTP durum kodu:`, response.status);
@@ -98,7 +103,11 @@ const MyJobsPage = () => {
           if (response.status === 401) {
             // Token'ı yenile veya kullanıcıyı login sayfasına yönlendir
             console.error("401 - Yetkisiz erişim. Token geçersiz veya süresi dolmuş olabilir.");
-            localStorage.removeItem('access_token'); // Geçersiz token'ı kaldır
+            try {
+              localStorage.removeItem('access_token'); // Geçersiz token'ı kaldır
+            } catch (storageError) {
+              console.error("LocalStorage silerken hata:", storageError);
+            }
             setError("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
             setLoading(false);
             return;
@@ -197,16 +206,23 @@ const MyJobsPage = () => {
       
       const newStatus = !job.isActive;
       
-      // Local storage'dan JWT token'ı al
-      const token = localStorage.getItem('access_token');
+      // Local storage erişim hatalarını ele al
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        toast.error("Tarayıcı ayarları nedeniyle oturum bilgilerine erişilemiyor.");
+        return;
+      }
       
       if (!token) {
         toast.error("Oturum bilginiz bulunamadı. Lütfen tekrar giriş yapın.");
         return;
       }
       
-      // API'ye güncelleme isteği gönder
-      const apiUrl = `http://localhost:5555/api/v1/jobs/${jobId}`;
+      // API'ye güncelleme isteği gönder - ÖNEMLİ: Production URL'ini kullan!
+      const apiUrl = `https://job-portal-gfus.onrender.com/api/v1/jobs/${jobId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
@@ -216,7 +232,10 @@ const MyJobsPage = () => {
         },
         body: JSON.stringify({
           is_active: newStatus
-        })
+        }),
+        // CORS sorunu çözmek için
+        credentials: 'omit', // No credentials 
+        mode: 'cors' // Explicit CORS mode
       });
       
       if (!response.ok) {

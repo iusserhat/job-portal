@@ -30,9 +30,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // Önce localStorage'ı temizle
-      StorageService.removeItem("access_token");
-      StorageService.removeItem("user_data");
-      StorageService.removeItem("user_role");
+      try {
+        StorageService.removeItem("access_token");
+        StorageService.removeItem("user_data");
+        StorageService.removeItem("user_role");
+      } catch (storageError) {
+        console.error("AuthProvider - Login: localStorage temizleme hatası", storageError);
+        // Devam et, sonraki işlemleri deneyelim
+      }
       
       // Kullanıcı tipini doğru formatta olduğundan emin olalım
       const userTypeId = String(user.user_type_id).trim();
@@ -66,17 +71,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Token'ı önce bir değişkende oluştur ve doğrula
       const tokenToStore = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
       
-      // Ardından yeni verileri kaydedelim
-      StorageService.setItem("access_token", tokenToStore);
-      
-      // Kullanıcı rolünü ayrıca saklayalım
-      StorageService.setItem("user_role", userRole);
-      
-      // Kullanıcı verilerini local storage'a da yaz - JSON.stringify ile
-      const userJson = JSON.stringify(modifiedUser);
-      StorageService.setItem("user_data", userJson);
-      
-      console.log("AuthProvider - Login: localStorage kullanıcı verisi kaydedildi:", userJson);
+      // Ardından yeni verileri kaydedelim - localStorage hatalarını ele al
+      try {
+        // Ardından yeni verileri kaydedelim
+        StorageService.setItem("access_token", tokenToStore);
+        
+        // Kullanıcı rolünü ayrıca saklayalım
+        StorageService.setItem("user_role", userRole);
+        
+        // Kullanıcı verilerini local storage'a da yaz - JSON.stringify ile
+        const userJson = JSON.stringify(modifiedUser);
+        StorageService.setItem("user_data", userJson);
+        
+        console.log("AuthProvider - Login: localStorage kullanıcı verisi kaydedildi:", userJson);
+      } catch (storageError) {
+        console.error("AuthProvider - Login: localStorage kaydetme hatası", storageError);
+        // LocalStorage kaydedemesek bile state'i güncelleyelim
+      }
       
       // State'i güncelleyelim
       setUser(modifiedUser);
@@ -85,19 +96,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("AuthProvider - Login: Kullanıcı başarıyla giriş yaptı, userType =", modifiedUser.user_type_id);
       
       // Doğrulama: localStorage verisi kontrolü
-      const savedUserData = StorageService.getItem("user_data");
-      const savedUserRole = StorageService.getItem("user_role");
-      const savedToken = StorageService.getItem("access_token");
-      if (savedUserData && savedToken) {
-        try {
-          const parsedUser = JSON.parse(savedUserData);
-          console.log("AuthProvider - Login: localStorage'dan okunan kullanıcı:", parsedUser);
-          console.log("AuthProvider - Login: localStorage'dan okunan rol:", savedUserRole);
-          console.log("AuthProvider - Login: localStorage'dan okunan token başlangıcı:", 
-                     savedToken.substring(0, 20) + "...");
-        } catch (error) {
-          console.error("AuthProvider - Login: localStorage'daki kullanıcı parse hatası", error);
+      try {
+        const savedUserData = StorageService.getItem("user_data");
+        const savedUserRole = StorageService.getItem("user_role");
+        const savedToken = StorageService.getItem("access_token");
+        if (savedUserData && savedToken) {
+          try {
+            const parsedUser = JSON.parse(savedUserData);
+            console.log("AuthProvider - Login: localStorage'dan okunan kullanıcı:", parsedUser);
+            console.log("AuthProvider - Login: localStorage'dan okunan rol:", savedUserRole);
+            console.log("AuthProvider - Login: localStorage'dan okunan token başlangıcı:", 
+                       savedToken.substring(0, 20) + "...");
+          } catch (error) {
+            console.error("AuthProvider - Login: localStorage'daki kullanıcı parse hatası", error);
+          }
         }
+      } catch (storageError) {
+        console.error("AuthProvider - Login: localStorage doğrulama hatası", storageError);
       }
     } catch (error) {
       console.error("AuthProvider - Login: Hata oluştu", error);
@@ -105,9 +120,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    StorageService.removeItem("access_token");
-    StorageService.removeItem("user_data");
-    StorageService.removeItem("user_role");
+    try {
+      StorageService.removeItem("access_token");
+      StorageService.removeItem("user_data");
+      StorageService.removeItem("user_role");
+    } catch (storageError) {
+      console.error("AuthProvider - Logout: localStorage temizleme hatası", storageError);
+    }
+    
+    // Sakladığımız state'i her durumda temizleyelim
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -310,7 +331,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const fetchUser = async () => {
       try {
         console.log("AuthProvider - Kullanıcı bilgileri kontrol ediliyor");
-        const token = StorageService.getItem("access_token");
+        // localStorage erişiminde hata olabilir
+        let token;
+        let storedUserData;
+        
+        try {
+          token = StorageService.getItem("access_token");
+          storedUserData = StorageService.getItem("user_data");
+        } catch (storageError) {
+          console.error("AuthProvider - fetchUser: localStorage erişim hatası", storageError);
+          setIsAuthenticated(false);
+          setUser(null);
+          return;
+        }
         
         if (!token) {
           console.log("AuthProvider - Token bulunamadı, oturum açılmamış");
@@ -320,7 +353,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         
         // Önce localStorage'dan kullanıcı bilgilerini kontrol et
-        const storedUserData = StorageService.getItem("user_data");
         if (storedUserData) {
           try {
             const userData = JSON.parse(storedUserData);
@@ -337,7 +369,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             userData.user_type_id = String(userData.user_type_id).trim();
             
             // Kullanıcı rolünü belirle
-            let userRole = StorageService.getItem("user_role");
+            let userRole;
+            try {
+              userRole = StorageService.getItem("user_role");
+            } catch (storageError) {
+              console.error("AuthProvider - fetchUser: userRole erişim hatası", storageError);
+              userRole = null;
+            }
+            
             if (!userRole) {
               userRole = "unknown";
               
@@ -356,8 +395,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               }
               
               // Kullanıcı rolünü kaydet
-              StorageService.setItem("user_role", userRole);
-              console.log(`AuthProvider - fetchUser: Kullanıcı rolü belirlendi: ${userRole}`);
+              try {
+                StorageService.setItem("user_role", userRole);
+                console.log(`AuthProvider - fetchUser: Kullanıcı rolü belirlendi: ${userRole}`);
+              } catch (storageError) {
+                console.error("AuthProvider - fetchUser: userRole kaydetme hatası", storageError);
+              }
             }
             
             setUser(userData);
