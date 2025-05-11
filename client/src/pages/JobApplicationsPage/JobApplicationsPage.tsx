@@ -117,16 +117,46 @@ const JobApplicationsPage = () => {
         return;
       }
       
+      // URL'den token kontrolü
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+      
+      // Token alma
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        // URL'den gelen token varsa onu kullan
+        if (urlToken) {
+          token = urlToken;
+        } else {
+          toast.error("Oturum bilginize erişilemiyor. Tarayıcı ayarlarınızı kontrol edin.");
+          return;
+        }
+      }
+      
+      // localStorage'dan token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
+      }
+      
+      // Bearer prefix kontrolü
+      if (token && !token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
+      }
+      
       // API'den iş ilanı detaylarını al
-      const token = localStorage.getItem('access_token');
-      const apiUrl = `http://localhost:5555/api/v1/jobs/${jobId}`;
+      const apiUrl = `https://job-portal-gfus.onrender.com/api/v1/jobs/${jobId}`;
       
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+          'Authorization': token || ''
+        },
+        credentials: 'omit',
+        mode: 'cors'
       });
       
       if (!response.ok) {
@@ -162,10 +192,38 @@ const JobApplicationsPage = () => {
   // İlana yapılan başvuruları API'den çek
   const fetchApplications = async () => {
     try {
-      // API'den başvuruları al
-      const token = localStorage.getItem('access_token');
+      // URL'den token kontrolü
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+      
+      // Token alma
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        // URL'den gelen token varsa onu kullan
+        if (urlToken) {
+          token = urlToken;
+        } else {
+          toast.error("Oturum bilginize erişilemiyor. Tarayıcı ayarlarınızı kontrol edin.");
+          return;
+        }
+      }
+      
+      // localStorage'dan token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
+      }
+      
+      // Bearer prefix kontrolü
+      if (token && !token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
+      }
+      
+      // API'den başvuruları al - ÖNEMLİ: Production URL'ini kullan!
       // MongoDB'de kayıtlı başvuruları almak için doğrudan job_applications koleksiyonuna erişiyoruz
-      const apiUrl = `http://localhost:5555/api/v1/direct-jobs/${jobId}/applications`;
+      const apiUrl = `https://job-portal-gfus.onrender.com/api/v1/direct-jobs/${jobId}/applications`;
       
       console.log("JobApplicationsPage - Başvurular çekiliyor:", apiUrl);
       console.log("JobApplicationsPage - İlan ID değeri:", jobId);
@@ -184,9 +242,11 @@ const JobApplicationsPage = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': token,
           'Accept': 'application/json'
-        }
+        },
+        credentials: 'omit',
+        mode: 'cors'
       });
       
       if (!response.ok) {
@@ -279,17 +339,47 @@ const JobApplicationsPage = () => {
   // Başvuru durumunu güncelle
   const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
     try {
-      // API'ye güncelleme isteği gönder
-      const token = localStorage.getItem('access_token');
-      const apiUrl = `http://localhost:5555/api/v1/applications/${applicationId}`;
+      // URL'den token kontrolü
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+      
+      // Token alma
+      let token;
+      try {
+        token = localStorage.getItem('access_token');
+      } catch (storageError) {
+        console.error("LocalStorage erişim hatası:", storageError);
+        // URL'den gelen token varsa onu kullan
+        if (urlToken) {
+          token = urlToken;
+        } else {
+          toast.error("Oturum bilginize erişilemiyor. Tarayıcı ayarlarınızı kontrol edin.");
+          return;
+        }
+      }
+      
+      // localStorage'dan token yoksa URL'den gelen token varsa onu kullan
+      if (!token && urlToken) {
+        token = urlToken;
+      }
+      
+      // Bearer prefix kontrolü
+      if (token && !token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
+      }
+      
+      // API'ye güncelleme isteği gönder - ÖNEMLİ: Production URL'ini kullan!
+      const apiUrl = `https://job-portal-gfus.onrender.com/api/v1/applications/${applicationId}`;
       
       const response = await fetch(apiUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
+          'Authorization': token || ''
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: newStatus }),
+        credentials: 'omit',
+        mode: 'cors'
       });
       
       if (!response.ok) {
