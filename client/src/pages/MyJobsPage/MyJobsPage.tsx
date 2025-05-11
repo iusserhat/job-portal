@@ -27,6 +27,13 @@ const MyJobsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
 
+  // API URL'i için önceden tanımlı değerler (farklı ortamlar için)
+  const API_ENDPOINTS = {
+    local: "http://localhost:5555/api/v1/jobs/user-jobs",
+    production: "https://job-portal-gfus.onrender.com/api/v1/jobs/user-jobs",
+    netlify: "https://serene-begonia-ded421.netlify.app/api/v1/jobs/user-jobs"
+  };
+  
   // Sayfa yüklendiğinde verileri çek
   useEffect(() => {
     console.log("MyJobsPage - useEffect: İlanlar yükleniyor");
@@ -41,9 +48,13 @@ const MyJobsPage = () => {
     setError(null);
 
     try {
-      // API URL'ini belirle
-      const apiUrl = "http://localhost:5555/api/v1/jobs/user-jobs";
-      console.log("Kullanıcı ilanları çekiliyor:", apiUrl);
+      // Farklı API URL'lerini dene
+      const apiUrls = [
+        API_ENDPOINTS.local,
+        API_ENDPOINTS.production
+      ];
+      
+      console.log("Kullanıcı ilanları çekiliyor, denemeler yapılacak...");
       
       // Local storage'dan JWT token'ı al
       const token = localStorage.getItem('access_token');
@@ -56,6 +67,10 @@ const MyJobsPage = () => {
         return;
       }
       
+      // Token'ı kontrol et - uzunluğunu ve formatını görüntüle
+      console.log("Token uzunluğu:", token.length);
+      console.log("Token başlangıcı:", token.substring(0, 20) + "...");
+      
       // API isteği için başlıkları oluştur
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -63,42 +78,81 @@ const MyJobsPage = () => {
         'Authorization': `Bearer ${token}` // JWT token'ı ekle
       };
 
-      // Backend'e istek gönder
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers,
-        // İstek zaman aşımı 15 saniye
-        signal: AbortSignal.timeout(15000)
-      });
+      // Her API URL'ini sırayla dene
+      let response = null;
+      let error = null;
+      let apiUrl = "";
       
-      // HTTP durum kodunu kontrol et
-      console.log("HTTP durum kodu:", response.status);
-      
-      if (!response.ok) {
-        console.error("API yanıtı alınamadı:", response.status, response.statusText);
+      for (let i = 0; i < apiUrls.length; i++) {
+        apiUrl = apiUrls[i];
+        console.log(`Backend isteği gönderiliyor... (Deneme ${i+1}/${apiUrls.length}, URL: ${apiUrl})`);
         
-        // Yetkilendirme hatası ise
-        if (response.status === 401) {
-          setError("Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.");
-          return;
-        }
-        
-        // API hata mesajını almaya çalış
-        let errorDetail = "";
         try {
-          const errorData = await response.json();
-          errorDetail = errorData.message || errorData.error || "";
-        } catch (e) {
-          try {
-            errorDetail = await response.text();
-          } catch (e2) {
-            errorDetail = "Detay yok";
+          // Backend'e istek gönder
+          response = await fetch(apiUrl, {
+            method: 'GET',
+            headers,
+            credentials: 'include', // Cookie'leri ve kimlik doğrulama bilgilerini gönder
+            mode: 'cors', // CORS modunu açıkça belirt
+            // İstek zaman aşımı 15 saniye
+            signal: AbortSignal.timeout(15000)
+          });
+          
+          console.log(`Deneme ${i+1} - HTTP durum kodu:`, response.status);
+          
+          // Başarılı yanıt alındıysa döngüden çık
+          if (response.ok) {
+            console.log(`Başarılı yanıt alındı: ${apiUrl}`);
+            break;
+          }
+        } catch (err) {
+          error = err;
+          console.error(`Deneme ${i+1} başarısız oldu:`, err);
+          
+          // Son deneme değilse devam et
+          if (i < apiUrls.length - 1) {
+            console.log("Bir sonraki URL deneniyor...");
+            continue;
           }
         }
+      }
+      
+      // Hiçbir API yanıt vermediyse
+      if (!response || !response.ok) {
+        if (error) {
+          throw error;
+        }
         
-        console.error(`İlanlar alınamadı: ${response.status} ${response.statusText} - ${errorDetail}`);
-        setError("İlanlarınız yüklenirken bir hata oluştu: " + errorDetail);
-        return;
+        if (response) {
+          // HTTP durum kodunu kontrol et
+          console.error("Tüm API'ler başarısız oldu. Son yanıt:", response.status, response.statusText);
+          
+          // Yetkilendirme hatası ise
+          if (response.status === 401) {
+            // Token'ı yenile veya kullanıcıyı login sayfasına yönlendir
+            console.error("401 - Yetkisiz erişim. Token geçersiz veya süresi dolmuş olabilir.");
+            localStorage.removeItem('access_token'); // Geçersiz token'ı kaldır
+            setError("Oturum süresi dolmuş. Lütfen tekrar giriş yapın.");
+            return;
+          }
+          
+          // API hata mesajını almaya çalış
+          let errorDetail = "";
+          try {
+            const errorData = await response.json();
+            errorDetail = errorData.message || errorData.error || "";
+          } catch (e) {
+            try {
+              errorDetail = await response.text();
+            } catch (e2) {
+              errorDetail = "Detay yok";
+            }
+          }
+          
+          throw new Error(`İlanlar alınamadı: ${response.status} ${response.statusText} - ${errorDetail}`);
+        } else {
+          throw new Error("Sunucuya bağlanılamadı, yanıt alınamadı");
+        }
       }
       
       let data;
@@ -148,9 +202,10 @@ const MyJobsPage = () => {
         setError("Veriler beklenen formatta değil");
         setJobs([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("İş ilanları alınırken hata:", error);
-      setError("İlanlarınız yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.");
+      const errorMessage = error.message || "Bilinmeyen hata";
+      setError(`İlanlarınız yüklenirken bir hata oluştu: ${errorMessage}. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.`);
       // Hata durumunda boş dizi gösterelim
       setJobs([]);
     } finally {
