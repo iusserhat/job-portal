@@ -16,6 +16,11 @@ const PostJobPage = lazy(() => import("@/pages/PostJobPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 
 function App() {
+  return <AppContent />;
+}
+
+// Ana uygulama içeriği
+function AppContent() {
   const { login, isAuthenticated, isEmployer, isJobSeeker, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
