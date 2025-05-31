@@ -222,10 +222,10 @@ const HomePage = () => {
             <div className="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-6">
               <div className="max-w-xl lg:max-w-lg">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-900 lg:text-5xl">
-                  Bandırma'da İş Bulmak Artık Daha Kolay
+                  Cep Kampüs'te İş Bulmak Artık Daha Kolay
                 </h1>
                 <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg leading-6 sm:leading-7 text-gray-600">
-                  Bandırma ve çevresindeki en güncel iş ilanlarını keşfedin. 
+                  Cep Kampüs ile en güncel iş ilanlarını keşfedin. 
                   İster deneyimli bir profesyonel olun, ister kariyerinize yeni başlıyor olun, 
                   size uygun pozisyonlar burada!
                 </p>
